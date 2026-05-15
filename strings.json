@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "League Stats einrichten",
+        "description": "Gib deine Riot API-Daten ein.",
+        "data": {
+          "api_key": "Riot API-Key",
+          "game_name": "Riot Name",
+          "tag_line": "Tagline",
+          "platform": "Platform Routing",
+          "region": "Region Routing"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Riot API fehlgeschlagen. Prüfe API-Key, Riot Name, Tagline und Region."
+    },
+    "abort": {
+      "already_configured": "Dieser Riot Account ist bereits eingerichtet."
+    }
+  }
+}
