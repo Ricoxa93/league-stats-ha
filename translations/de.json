@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "League Stats",
+        "description": "League of Legends Account konfigurieren",
+        "data": {
+          "api_key": "Riot API Key",
+          "game_name": "Riot Name",
+          "tag_line": "Tag",
+          "platform": "Platform",
+          "region": "Region"
+        }
+      }
+    }
+  }
+}
