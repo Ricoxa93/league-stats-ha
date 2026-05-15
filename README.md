@@ -17,7 +17,7 @@ League of Legends Ranked Stats Integration for Home Assistant.
 
 Add custom repository:
 
-https://github.com/USERNAME/league-stats-ha
+https://github.com/Ricoxa93/league-stats-ha
 
 Category:
 Integration
