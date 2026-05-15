@@ -65,8 +65,8 @@ class LeagueStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema({
             vol.Required(CONF_API_KEY): str,
-            vol.Required(CONF_GAME_NAME, default="Ricoxa"): str,
-            vol.Required(CONF_TAG_LINE, default="1993"): str,
+            vol.Required(CONF_GAME_NAME, default="GAME NAME"): str,
+            vol.Required(CONF_TAG_LINE, default="EUW"): str,
             vol.Required(CONF_PLATFORM, default="euw1"): str,
             vol.Required(CONF_REGION, default="europe"): str,
         })
