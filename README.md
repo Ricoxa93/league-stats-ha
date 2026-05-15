@@ -132,7 +132,7 @@ Dann folgende Daten eintragen:
 | Feld | Beispiel |
 |---|---|
 | API-Key | RGAPI-xxxxxxxx |
-| Riot Name | Ricoxa |
+| Riot Name | NAME |
 | Tagline | EUW |
 | Platform | euw1 |
 | Region | europe |
@@ -144,14 +144,14 @@ Dann folgende Daten eintragen:
 Wenn dein Riot Name lautet:
 
 ```text
-Ricoxa#EUW
+NAME#EUW
 ```
 
 Dann gilt:
 
 | Teil | Wert |
 |---|---|
-| Riot Name | Ricoxa |
+| Riot Name | NAME |
 | Tagline | EUW |
 
 ---
