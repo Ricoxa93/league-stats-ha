@@ -41,10 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         update_interval=SCAN_INTERVAL,
     )
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        _LOGGER.error("League Stats update failed: %s", err)
+    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([
         LeagueUpdateStatusSensor(coordinator),
@@ -87,8 +84,6 @@ def parse_queue(leagues, queue_type):
     if not queue:
         return {
             "rank": "Unranked",
-            "tier": None,
-            "division": None,
             "lp": 0,
             "wins": 0,
             "losses": 0,
@@ -99,50 +94,46 @@ def parse_queue(leagues, queue_type):
     wins = queue.get("wins", 0)
     losses = queue.get("losses", 0)
     games = wins + losses
-    win_rate = round((wins / games) * 100, 1) if games > 0 else 0
 
     return {
         "rank": f"{queue.get('tier')} {queue.get('rank')}",
-        "tier": queue.get("tier"),
-        "division": queue.get("rank"),
         "lp": queue.get("leaguePoints", 0),
         "wins": wins,
         "losses": losses,
         "games": games,
-        "win_rate": win_rate,
+        "win_rate": round((wins / games) * 100, 1) if games > 0 else 0,
     }
 
 
-async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region):
+async def fetch_lol_data(
+    session,
+    api_key,
+    game_name,
+    tag_line,
+    platform,
+    region,
+):
     params = {"api_key": api_key}
 
     account_url = (
-        f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
+        f"https://{region}.api.riotgames.com"
+        f"/riot/account/v1/accounts/by-riot-id/"
         f"{game_name}/{tag_line}"
     )
 
     async with session.get(account_url, params=params) as resp:
-        if resp.status != 200:
-            text = await resp.text()
-            _LOGGER.error("Riot Account API error %s: %s", resp.status, text)
-            resp.raise_for_status()
-
+        resp.raise_for_status()
         account = await resp.json()
 
     puuid = account["puuid"]
-    account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
 
     league_url = (
-        f"https://{platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/"
-        f"{puuid}"
+        f"https://{platform}.api.riotgames.com"
+        f"/lol/league/v4/entries/by-puuid/{puuid}"
     )
 
     async with session.get(league_url, params=params) as resp:
-        if resp.status != 200:
-            text = await resp.text()
-            _LOGGER.error("Riot League API error %s: %s", resp.status, text)
-            resp.raise_for_status()
-
+        resp.raise_for_status()
         leagues = await resp.json()
 
     solo = parse_queue(leagues, "RANKED_SOLO_5x5")
@@ -151,38 +142,38 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
     total_wins = solo["wins"] + flex["wins"]
     total_losses = solo["losses"] + flex["losses"]
     total_games = total_wins + total_losses
-    total_win_rate = (
-        round((total_wins / total_games) * 100, 1)
-        if total_games > 0 else 0
-    )
 
     return {
-        "account": account_name,
-        "account_slug": safe_slug(account_name),
+        "account_slug": safe_slug(
+            f"{account.get('gameName')}#{account.get('tagLine')}"
+        ),
+
         "solo": solo,
         "flex": flex,
+
         "total": {
             "wins": total_wins,
             "losses": total_losses,
             "games": total_games,
-            "win_rate": total_win_rate,
+            "win_rate": (
+                round((total_wins / total_games) * 100, 1)
+                if total_games > 0
+                else 0
+            ),
         },
     }
 
 
 class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
     def __init__(self, coordinator, sensor_key):
         super().__init__(coordinator)
 
-        if coordinator.data:
-            account_slug = coordinator.data.get(
-                "account_slug",
-                "league_account"
-            )
-        else:
-            account_slug = "league_account"
+        account_slug = coordinator.data.get(
+            "account_slug",
+            "league_account"
+        )
 
         self._attr_unique_id = f"{account_slug}_{sensor_key}"
 
@@ -195,15 +186,9 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        account = (
-            self.coordinator.data.get("account", "League Account")
-            if self.coordinator.data
-            else "League Account"
-        )
-
         return {
-            "identifiers": {("league_stats", account)},
-            "name": account,
+            "identifiers": {("league_stats", "league_stats")},
+            "name": "League Stats",
             "manufacturer": "Ricoxa93",
             "model": "League of Legends Ranked Stats",
         }
@@ -275,27 +260,23 @@ class LeagueTotalWinRateSensor(LeagueBaseSensor):
 
 
 class LeagueSoloRankSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue Rank"
+    _attr_name = "SoloQ Rank"
     _attr_icon = "mdi:trophy-outline"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_rank")
+        super().__init__(coordinator, "solo_rank")
 
     @property
     def native_value(self):
         return self.coordinator.data["solo"]["rank"]
 
-    @property
-    def extra_state_attributes(self):
-        return self.coordinator.data["solo"]
-
 
 class LeagueSoloLpSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue LP"
+    _attr_name = "SoloQ LP"
     _attr_icon = "mdi:star-circle"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_lp")
+        super().__init__(coordinator, "solo_lp")
 
     @property
     def native_value(self):
@@ -303,11 +284,11 @@ class LeagueSoloLpSensor(LeagueBaseSensor):
 
 
 class LeagueSoloWinsSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue Wins"
+    _attr_name = "SoloQ Wins"
     _attr_icon = "mdi:sword-cross"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_wins")
+        super().__init__(coordinator, "solo_wins")
 
     @property
     def native_value(self):
@@ -315,11 +296,11 @@ class LeagueSoloWinsSensor(LeagueBaseSensor):
 
 
 class LeagueSoloLossesSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue Losses"
+    _attr_name = "SoloQ Losses"
     _attr_icon = "mdi:skull-outline"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_losses")
+        super().__init__(coordinator, "solo_losses")
 
     @property
     def native_value(self):
@@ -327,11 +308,11 @@ class LeagueSoloLossesSensor(LeagueBaseSensor):
 
 
 class LeagueSoloGamesSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue Games"
+    _attr_name = "SoloQ Games"
     _attr_icon = "mdi:controller-classic-outline"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_games")
+        super().__init__(coordinator, "solo_games")
 
     @property
     def native_value(self):
@@ -339,12 +320,12 @@ class LeagueSoloGamesSensor(LeagueBaseSensor):
 
 
 class LeagueSoloWinRateSensor(LeagueBaseSensor):
-    _attr_name = "Solo Queue Win Rate"
+    _attr_name = "SoloQ Win Rate"
     _attr_icon = "mdi:percent-outline"
     _attr_native_unit_of_measurement = "%"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "solo_queue_win_rate")
+        super().__init__(coordinator, "solo_win_rate")
 
     @property
     def native_value(self):
@@ -352,27 +333,23 @@ class LeagueSoloWinRateSensor(LeagueBaseSensor):
 
 
 class LeagueFlexRankSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue Rank"
+    _attr_name = "Flex Rank"
     _attr_icon = "mdi:account-group"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_rank")
+        super().__init__(coordinator, "flex_rank")
 
     @property
     def native_value(self):
         return self.coordinator.data["flex"]["rank"]
 
-    @property
-    def extra_state_attributes(self):
-        return self.coordinator.data["flex"]
-
 
 class LeagueFlexLpSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue LP"
+    _attr_name = "Flex LP"
     _attr_icon = "mdi:star-circle-outline"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_lp")
+        super().__init__(coordinator, "flex_lp")
 
     @property
     def native_value(self):
@@ -380,11 +357,11 @@ class LeagueFlexLpSensor(LeagueBaseSensor):
 
 
 class LeagueFlexWinsSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue Wins"
+    _attr_name = "Flex Wins"
     _attr_icon = "mdi:account-multiple-check"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_wins")
+        super().__init__(coordinator, "flex_wins")
 
     @property
     def native_value(self):
@@ -392,11 +369,11 @@ class LeagueFlexWinsSensor(LeagueBaseSensor):
 
 
 class LeagueFlexLossesSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue Losses"
+    _attr_name = "Flex Losses"
     _attr_icon = "mdi:account-multiple-remove"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_losses")
+        super().__init__(coordinator, "flex_losses")
 
     @property
     def native_value(self):
@@ -404,11 +381,11 @@ class LeagueFlexLossesSensor(LeagueBaseSensor):
 
 
 class LeagueFlexGamesSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue Games"
+    _attr_name = "Flex Games"
     _attr_icon = "mdi:controller-classic"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_games")
+        super().__init__(coordinator, "flex_games")
 
     @property
     def native_value(self):
@@ -416,12 +393,12 @@ class LeagueFlexGamesSensor(LeagueBaseSensor):
 
 
 class LeagueFlexWinRateSensor(LeagueBaseSensor):
-    _attr_name = "Flex Queue Win Rate"
+    _attr_name = "Flex Win Rate"
     _attr_icon = "mdi:percent"
     _attr_native_unit_of_measurement = "%"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator, "flex_queue_win_rate")
+        super().__init__(coordinator, "flex_win_rate")
 
     @property
     def native_value(self):
