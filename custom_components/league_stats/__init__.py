@@ -1,6 +1,6 @@
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["sensor", "image"]
 
 
 async def async_setup_entry(hass, entry):
