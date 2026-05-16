@@ -27,139 +27,34 @@ LATEST_DDRAGON_VERSION = None
 
 
 SENSOR_DESCRIPTIONS = [
-    {
-        "key": "update_status",
-        "name": "Update Status",
-        "icon": "mdi:update",
-        "path": ("status",),
-    },
+    {"key": "update_status", "name": "Update Status", "icon": "mdi:update", "path": ("status",)},
 
-    {
-        "key": "ranked_wins",
-        "name": "Ranked Wins",
-        "icon": "mdi:sword-cross",
-        "path": ("total", "wins"),
-    },
-    {
-        "key": "ranked_losses",
-        "name": "Ranked Losses",
-        "icon": "mdi:skull",
-        "path": ("total", "losses"),
-    },
-    {
-        "key": "ranked_games",
-        "name": "Ranked Games",
-        "icon": "mdi:controller-classic",
-        "path": ("total", "games"),
-    },
-    {
-        "key": "ranked_win_rate",
-        "name": "Ranked Win Rate",
-        "icon": "mdi:percent",
-        "unit": PERCENTAGE,
-        "path": ("total", "win_rate"),
-    },
+    {"key": "ranked_wins", "name": "Ranked Wins", "icon": "mdi:sword-cross", "path": ("total", "wins")},
+    {"key": "ranked_losses", "name": "Ranked Losses", "icon": "mdi:skull", "path": ("total", "losses")},
+    {"key": "ranked_games", "name": "Ranked Games", "icon": "mdi:controller-classic", "path": ("total", "games")},
+    {"key": "ranked_win_rate", "name": "Ranked Win Rate", "icon": "mdi:percent", "unit": PERCENTAGE, "path": ("total", "win_rate")},
 
-    {
-        "key": "soloq_rank",
-        "name": "SoloQ Rank",
-        "icon": "mdi:trophy-outline",
-        "path": ("solo", "rank"),
-    },
-    {
-        "key": "soloq_lp",
-        "name": "SoloQ LP",
-        "icon": "mdi:star-circle",
-        "path": ("solo", "lp"),
-    },
-    {
-        "key": "soloq_wins",
-        "name": "SoloQ Wins",
-        "icon": "mdi:sword-cross",
-        "path": ("solo", "wins"),
-    },
-    {
-        "key": "soloq_losses",
-        "name": "SoloQ Losses",
-        "icon": "mdi:skull-outline",
-        "path": ("solo", "losses"),
-    },
-    {
-        "key": "soloq_games",
-        "name": "SoloQ Games",
-        "icon": "mdi:controller-classic-outline",
-        "path": ("solo", "games"),
-    },
-    {
-        "key": "soloq_win_rate",
-        "name": "SoloQ Win Rate",
-        "icon": "mdi:percent-outline",
-        "unit": PERCENTAGE,
-        "path": ("solo", "win_rate"),
-    },
+    {"key": "soloq_rank", "name": "SoloQ Rank", "icon": "mdi:trophy-outline", "path": ("solo", "rank")},
+    {"key": "soloq_lp", "name": "SoloQ LP", "icon": "mdi:star-circle", "path": ("solo", "lp")},
+    {"key": "soloq_wins", "name": "SoloQ Wins", "icon": "mdi:sword-cross", "path": ("solo", "wins")},
+    {"key": "soloq_losses", "name": "SoloQ Losses", "icon": "mdi:skull-outline", "path": ("solo", "losses")},
+    {"key": "soloq_games", "name": "SoloQ Games", "icon": "mdi:controller-classic-outline", "path": ("solo", "games")},
+    {"key": "soloq_win_rate", "name": "SoloQ Win Rate", "icon": "mdi:percent-outline", "unit": PERCENTAGE, "path": ("solo", "win_rate")},
 
-    {
-        "key": "flex_rank",
-        "name": "Flex Rank",
-        "icon": "mdi:account-group",
-        "path": ("flex", "rank"),
-    },
-    {
-        "key": "flex_lp",
-        "name": "Flex LP",
-        "icon": "mdi:star-circle-outline",
-        "path": ("flex", "lp"),
-    },
-    {
-        "key": "flex_wins",
-        "name": "Flex Wins",
-        "icon": "mdi:account-multiple-check",
-        "path": ("flex", "wins"),
-    },
-    {
-        "key": "flex_losses",
-        "name": "Flex Losses",
-        "icon": "mdi:account-multiple-remove",
-        "path": ("flex", "losses"),
-    },
-    {
-        "key": "flex_games",
-        "name": "Flex Games",
-        "icon": "mdi:controller-classic",
-        "path": ("flex", "games"),
-    },
-    {
-        "key": "flex_win_rate",
-        "name": "Flex Win Rate",
-        "icon": "mdi:percent",
-        "unit": PERCENTAGE,
-        "path": ("flex", "win_rate"),
-    },
+    {"key": "flex_rank", "name": "Flex Rank", "icon": "mdi:account-group", "path": ("flex", "rank")},
+    {"key": "flex_lp", "name": "Flex LP", "icon": "mdi:star-circle-outline", "path": ("flex", "lp")},
+    {"key": "flex_wins", "name": "Flex Wins", "icon": "mdi:account-multiple-check", "path": ("flex", "wins")},
+    {"key": "flex_losses", "name": "Flex Losses", "icon": "mdi:account-multiple-remove", "path": ("flex", "losses")},
+    {"key": "flex_games", "name": "Flex Games", "icon": "mdi:controller-classic", "path": ("flex", "games")},
+    {"key": "flex_win_rate", "name": "Flex Win Rate", "icon": "mdi:percent", "unit": PERCENTAGE, "path": ("flex", "win_rate")},
 
-    {
-        "key": "top_champion",
-        "name": "Top Champion",
-        "icon": "mdi:account-star",
-        "path": ("top_champion", "name"),
-    },
-    {
-        "key": "top_champion_level",
-        "name": "Top Champion Level",
-        "icon": "mdi:chevron-up-circle",
-        "path": ("top_champion", "level"),
-    },
-    {
-        "key": "top_champion_points",
-        "name": "Top Champion Points",
-        "icon": "mdi:star-four-points",
-        "path": ("top_champion", "points"),
-    },
-    {
-        "key": "top_champion_icon",
-        "name": "Top Champion Icon",
-        "icon": "mdi:image",
-        "path": ("top_champion", "icon"),
-    },
+    {"key": "top_champion", "name": "Top Champion", "icon": "mdi:account-star", "path": ("top_champion", "name")},
+    {"key": "top_champion_level", "name": "Top Champion Level", "icon": "mdi:chevron-up-circle", "path": ("top_champion", "level")},
+    {"key": "top_champion_points", "name": "Top Champion Points", "icon": "mdi:star-four-points", "path": ("top_champion", "points")},
+
+    {"key": "top_champion_icon", "name": "Top Champion Icon", "icon": "mdi:image", "path": ("top_champion", "icon")},
+    {"key": "top_champion_splash", "name": "Top Champion Splash", "icon": "mdi:image-area", "path": ("top_champion", "splash")},
+    {"key": "top_champion_loading", "name": "Top Champion Loading", "icon": "mdi:image-frame", "path": ("top_champion", "loading")},
 ]
 
 
@@ -184,12 +79,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     await coordinator.async_config_entry_first_refresh()
 
-    entities = [
+    async_add_entities([
         LeagueStatsSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
-    ]
-
-    async_add_entities(entities)
+    ])
 
 
 def safe_slug(value):
@@ -239,9 +132,7 @@ async def get_latest_ddragon_version(session):
     if LATEST_DDRAGON_VERSION:
         return LATEST_DDRAGON_VERSION
 
-    versions_url = "https://ddragon.leagueoflegends.com/api/versions.json"
-
-    async with session.get(versions_url) as resp:
+    async with session.get("https://ddragon.leagueoflegends.com/api/versions.json") as resp:
         resp.raise_for_status()
         versions = await resp.json()
 
@@ -255,6 +146,8 @@ async def get_champion_data(session, champion_id):
             "name": "Unknown",
             "ddragon_id": None,
             "icon": None,
+            "splash": None,
+            "loading": None,
         }
 
     if champion_id in CHAMPION_CACHE:
@@ -276,16 +169,21 @@ async def get_champion_data(session, champion_id):
         champ_name = champion["name"]
         champ_ddragon_id = champion["id"]
 
-        icon_url = (
-            f"https://ddragon.leagueoflegends.com/cdn/"
-            f"{latest_version}/img/champion/"
-            f"{champ_ddragon_id}.png"
-        )
-
         CHAMPION_CACHE[champ_key] = {
             "name": champ_name,
             "ddragon_id": champ_ddragon_id,
-            "icon": icon_url,
+            "icon": (
+                f"https://ddragon.leagueoflegends.com/cdn/"
+                f"{latest_version}/img/champion/{champ_ddragon_id}.png"
+            ),
+            "splash": (
+                f"https://ddragon.leagueoflegends.com/cdn/img/champion/splash/"
+                f"{champ_ddragon_id}_0.jpg"
+            ),
+            "loading": (
+                f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/"
+                f"{champ_ddragon_id}_0.jpg"
+            ),
         }
 
     return CHAMPION_CACHE.get(
@@ -294,6 +192,8 @@ async def get_champion_data(session, champion_id):
             "name": f"Champion {champion_id}",
             "ddragon_id": None,
             "icon": None,
+            "splash": None,
+            "loading": None,
         },
     )
 
@@ -322,6 +222,8 @@ async def fetch_top_champion(session, api_key, platform, puuid):
             "champion_id": None,
             "ddragon_id": None,
             "icon": None,
+            "splash": None,
+            "loading": None,
         }
 
     top = mastery[0]
@@ -335,17 +237,12 @@ async def fetch_top_champion(session, api_key, platform, puuid):
         "champion_id": champion_id,
         "ddragon_id": champion_data["ddragon_id"],
         "icon": champion_data["icon"],
+        "splash": champion_data["splash"],
+        "loading": champion_data["loading"],
     }
 
 
-async def fetch_lol_data(
-    session,
-    api_key,
-    game_name,
-    tag_line,
-    platform,
-    region,
-):
+async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region):
     params = {"api_key": api_key}
 
     account_url = (
@@ -359,7 +256,6 @@ async def fetch_lol_data(
         account = await resp.json()
 
     puuid = account["puuid"]
-
     account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
     account_slug = safe_slug(account_name)
 
@@ -425,7 +321,6 @@ class LeagueStatsSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = (
             f"league_stats_{account_slug}_{description['key']}"
         )
-
         self._attr_icon = description.get("icon")
         self._attr_native_unit_of_measurement = description.get("unit")
 
@@ -457,11 +352,7 @@ class LeagueStatsSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        account = self.coordinator.data.get(
-            "account",
-            "League Account",
-        )
-
+        account = self.coordinator.data.get("account", "League Account")
         account_slug = self.coordinator.data.get(
             "account_slug",
             "league_account",
