@@ -127,6 +127,10 @@ async def fetch_lol_data(
 
     puuid = account["puuid"]
 
+    account_slug = safe_slug(
+        f"{account.get('gameName')}#{account.get('tagLine')}"
+    )
+
     league_url = (
         f"https://{platform}.api.riotgames.com"
         f"/lol/league/v4/entries/by-puuid/{puuid}"
@@ -144,9 +148,7 @@ async def fetch_lol_data(
     total_games = total_wins + total_losses
 
     return {
-        "account_slug": safe_slug(
-            f"{account.get('gameName')}#{account.get('tagLine')}"
-        ),
+        "account_slug": account_slug,
 
         "solo": solo,
         "flex": flex,
@@ -186,8 +188,13 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
+        account_slug = self.coordinator.data.get(
+            "account_slug",
+            "league_account"
+        )
+
         return {
-            "identifiers": {("league_stats", "league_stats")},
+            "identifiers": {("league_stats", account_slug)},
             "name": "League Stats",
             "manufacturer": "Ricoxa93",
             "model": "League of Legends Ranked Stats",
