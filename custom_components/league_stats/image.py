@@ -2,7 +2,10 @@ import logging
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .sensor import fetch_lol_data, SCAN_INTERVAL
 from .const import (
@@ -17,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
     config = entry.data
     session = async_get_clientsession(hass)
 
@@ -46,15 +47,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class LeagueTopChampionImage(CoordinatorEntity, ImageEntity):
     _attr_has_entity_name = False
+    _attr_content_type = "image/png"
 
     def __init__(self, coordinator):
-        super().__init__(coordinator)
+        CoordinatorEntity.__init__(self, coordinator)
+        ImageEntity.__init__(self, coordinator.hass)
 
         account_slug = coordinator.data.get("account_slug", "league_account")
 
         self._attr_name = "Top Champion Image"
-        self._attr_unique_id = f"league_stats_{account_slug}_top_champion_image"
-        self._attr_content_type = "image/png"
+        self._attr_unique_id = (
+            f"league_stats_{account_slug}_top_champion_image"
+        )
 
     @property
     def available(self):
@@ -71,7 +75,10 @@ class LeagueTopChampionImage(CoordinatorEntity, ImageEntity):
     @property
     def device_info(self):
         account = self.coordinator.data.get("account", "League Account")
-        account_slug = self.coordinator.data.get("account_slug", "league_account")
+        account_slug = self.coordinator.data.get(
+            "account_slug",
+            "league_account",
+        )
 
         return {
             "identifiers": {("league_stats", account_slug)},
