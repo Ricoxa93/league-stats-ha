@@ -171,7 +171,7 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
 
 
 class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator, sensor_key):
         super().__init__(coordinator)
