@@ -9,5 +9,5 @@
   "codeowners": ["@USERNAME"],
   "iot_class": "cloud_polling",
   "config_flow": true,
-  "platforms": ["sensor"]
+  "platforms": ["sensor", "image"]
 }
