@@ -1,4 +1,6 @@
+import aiohttp
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -17,13 +19,15 @@ async def validate_input(hass, data):
     session = async_get_clientsession(hass)
 
     api_key = data[CONF_API_KEY]
-    game_name = data[CONF_GAME_NAME]
-    tag_line = data[CONF_TAG_LINE]
-    region = data[CONF_REGION]
+    game_name = data[CONF_GAME_NAME].strip()
+    tag_line = data[CONF_TAG_LINE].strip()
+    region = data[CONF_REGION].lower().strip()
 
-    url = (
-        f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/"
-        f"{game_name}/{tag_line}"
+    url = URL(
+        f"https://{region}.api.riotgames.com"
+        f"/riot/account/v1/accounts/by-riot-id/"
+        f"{game_name}/{tag_line}",
+        encoded=False,
     )
 
     async with session.get(url, params={"api_key": api_key}) as resp:
@@ -33,7 +37,10 @@ async def validate_input(hass, data):
         account = await resp.json()
 
     return {
-        "title": f"{account.get('gameName')}#{account.get('tagLine')}"
+        "title": f"{account.get('gameName')}#{account.get('tagLine')}",
+        "puuid": account.get("puuid"),
+        "game_name": account.get("gameName"),
+        "tag_line": account.get("tagLine"),
     }
 
 
@@ -45,22 +52,29 @@ class LeagueStatsConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                user_input[CONF_PLATFORM] = user_input[CONF_PLATFORM].lower()
-                user_input[CONF_REGION] = user_input[CONF_REGION].lower()
+                user_input[CONF_GAME_NAME] = user_input[CONF_GAME_NAME].strip()
+                user_input[CONF_TAG_LINE] = user_input[CONF_TAG_LINE].strip()
+                user_input[CONF_PLATFORM] = user_input[CONF_PLATFORM].lower().strip()
+                user_input[CONF_REGION] = user_input[CONF_REGION].lower().strip()
 
                 info = await validate_input(self.hass, user_input)
 
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_GAME_NAME]}#{user_input[CONF_TAG_LINE]}"
-                )
+                unique_id = f"{info['puuid']}_{user_input[CONF_PLATFORM]}"
+
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
+
+                user_input[CONF_GAME_NAME] = info["game_name"]
+                user_input[CONF_TAG_LINE] = info["tag_line"]
 
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
                 )
 
-            except Exception:
+            except ValueError:
+                errors["base"] = "cannot_connect"
+            except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
 
         schema = vol.Schema({
