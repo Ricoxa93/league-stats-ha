@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
+CHAMPION_CACHE = {}
+
 
 SENSOR_DESCRIPTIONS = [
     {
@@ -132,6 +134,25 @@ SENSOR_DESCRIPTIONS = [
         "unit": PERCENTAGE,
         "path": ("flex", "win_rate"),
     },
+
+    {
+        "key": "top_champion",
+        "name": "Top Champion",
+        "icon": "mdi:account-star",
+        "path": ("top_champion", "name"),
+    },
+    {
+        "key": "top_champion_level",
+        "name": "Top Champion Level",
+        "icon": "mdi:chevron-up-circle",
+        "path": ("top_champion", "level"),
+    },
+    {
+        "key": "top_champion_points",
+        "name": "Top Champion Points",
+        "icon": "mdi:star-four-points",
+        "path": ("top_champion", "points"),
+    },
 ]
 
 
@@ -205,6 +226,74 @@ def parse_queue(leagues, queue_type):
     }
 
 
+async def get_champion_name(session, champion_id):
+    if champion_id is None:
+        return "Unknown"
+
+    if champion_id in CHAMPION_CACHE:
+        return CHAMPION_CACHE[champion_id]
+
+    versions_url = "https://ddragon.leagueoflegends.com/api/versions.json"
+
+    async with session.get(versions_url) as resp:
+        resp.raise_for_status()
+        versions = await resp.json()
+
+    latest_version = versions[0]
+
+    champions_url = (
+        f"https://ddragon.leagueoflegends.com/cdn/"
+        f"{latest_version}/data/en_US/champion.json"
+    )
+
+    async with session.get(champions_url) as resp:
+        resp.raise_for_status()
+        champions = await resp.json()
+
+    for champion in champions["data"].values():
+        champ_key = int(champion["key"])
+        champ_name = champion["name"]
+        CHAMPION_CACHE[champ_key] = champ_name
+
+    return CHAMPION_CACHE.get(champion_id, f"Champion {champion_id}")
+
+
+async def fetch_top_champion(session, api_key, platform, puuid):
+    params = {
+        "api_key": api_key,
+        "count": 1,
+    }
+
+    mastery_url = (
+        f"https://{platform}.api.riotgames.com"
+        f"/lol/champion-mastery/v4/champion-masteries/by-puuid/"
+        f"{puuid}/top"
+    )
+
+    async with session.get(mastery_url, params=params) as resp:
+        resp.raise_for_status()
+        mastery = await resp.json()
+
+    if not mastery:
+        return {
+            "name": "Unknown",
+            "level": 0,
+            "points": 0,
+            "champion_id": None,
+        }
+
+    top = mastery[0]
+    champion_id = top.get("championId")
+    champion_name = await get_champion_name(session, champion_id)
+
+    return {
+        "name": champion_name,
+        "level": top.get("championLevel", 0),
+        "points": top.get("championPoints", 0),
+        "champion_id": champion_id,
+    }
+
+
 async def fetch_lol_data(
     session,
     api_key,
@@ -242,6 +331,13 @@ async def fetch_lol_data(
     solo = parse_queue(leagues, "RANKED_SOLO_5x5")
     flex = parse_queue(leagues, "RANKED_FLEX_SR")
 
+    top_champion = await fetch_top_champion(
+        session=session,
+        api_key=api_key,
+        platform=platform,
+        puuid=puuid,
+    )
+
     total_wins = solo["wins"] + flex["wins"]
     total_losses = solo["losses"] + flex["losses"]
     total_games = total_wins + total_losses
@@ -253,6 +349,7 @@ async def fetch_lol_data(
 
         "solo": solo,
         "flex": flex,
+        "top_champion": top_champion,
 
         "total": {
             "wins": total_wins,
