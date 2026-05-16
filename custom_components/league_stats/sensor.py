@@ -177,7 +177,7 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
             "league_account"
         )
 
-        self._attr_unique_id = f"{account_slug}_{sensor_key}"
+        self._attr_unique_id = f"league_stats_{account_slug}_{sensor_key}"
 
     @property
     def available(self):
