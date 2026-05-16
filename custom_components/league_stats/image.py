@@ -19,6 +19,28 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+IMAGE_DESCRIPTIONS = [
+    {
+        "key": "top_champion_icon_image",
+        "name": "Top Champion Icon",
+        "url_key": "icon",
+        "content_type": "image/png",
+    },
+    {
+        "key": "top_champion_splash_image",
+        "name": "Top Champion Splash",
+        "url_key": "splash",
+        "content_type": "image/jpeg",
+    },
+    {
+        "key": "top_champion_loading_image",
+        "name": "Top Champion Loading",
+        "url_key": "loading",
+        "content_type": "image/jpeg",
+    },
+]
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     config = entry.data
     session = async_get_clientsession(hass)
@@ -41,36 +63,41 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([
-        LeagueTopChampionImage(coordinator),
+        LeagueChampionImage(coordinator, description)
+        for description in IMAGE_DESCRIPTIONS
     ])
 
 
-class LeagueTopChampionImage(CoordinatorEntity, ImageEntity):
+class LeagueChampionImage(CoordinatorEntity, ImageEntity):
     _attr_has_entity_name = False
-    _attr_content_type = "image/png"
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator, description):
         CoordinatorEntity.__init__(self, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
 
+        self.description = description
+
         account_slug = coordinator.data.get("account_slug", "league_account")
 
-        self._attr_name = "Top Champion Image"
+        self._attr_name = description["name"]
         self._attr_unique_id = (
-            f"league_stats_{account_slug}_top_champion_image"
+            f"league_stats_{account_slug}_{description['key']}"
         )
+        self._attr_content_type = description["content_type"]
 
     @property
     def available(self):
         return (
             self.coordinator.last_update_success
             and self.coordinator.data is not None
-            and self.coordinator.data.get("top_champion", {}).get("icon") is not None
+            and self.coordinator.data.get("top_champion", {}).get(
+                self.description["url_key"]
+            ) is not None
         )
 
     @property
     def image_url(self):
-        return self.coordinator.data["top_champion"]["icon"]
+        return self.coordinator.data["top_champion"][self.description["url_key"]]
 
     @property
     def device_info(self):
