@@ -3,9 +3,10 @@
   "name": "League Stats",
   "version": "0.3.0",
   "documentation": "https://developer.riotgames.com/",
+  "issue_tracker": "https://github.com/USERNAME/league_stats/issues",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [],
+  "codeowners": ["@USERNAME"],
   "iot_class": "cloud_polling",
   "config_flow": true,
   "platforms": ["sensor"]
