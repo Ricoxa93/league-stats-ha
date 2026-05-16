@@ -20,7 +20,6 @@ SCAN_INTERVAL = timedelta(minutes=30)
 
 async def async_setup_entry(hass, entry, async_add_entities):
     config = entry.data
-
     session = async_get_clientsession(hass)
 
     coordinator = DataUpdateCoordinator(
@@ -44,6 +43,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.error("League Stats konnte nicht aktualisiert werden: %s", err)
 
     async_add_entities([
+        LeagueUpdateStatusSensor(coordinator),
+
         LeagueTotalRankSensor(coordinator),
         LeagueTotalWinsSensor(coordinator),
         LeagueTotalLossesSensor(coordinator),
@@ -141,6 +142,7 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
     total_winrate = round((total_wins / total_games) * 100, 1) if total_games > 0 else 0
 
     return {
+        "account": f"{account.get('gameName')}#{account.get('tagLine')}",
         "solo": solo,
         "flex": flex,
         "total": {
@@ -154,6 +156,8 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
 
 
 class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator):
         super().__init__(coordinator)
 
@@ -161,10 +165,32 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
     def available(self):
         return self.coordinator.last_update_success and self.coordinator.data is not None
 
+    @property
+    def device_info(self):
+        account = self.coordinator.data.get("account", "League Account") if self.coordinator.data else "League Account"
+
+        return {
+            "identifiers": {("league_stats", account)},
+            "name": "League Stats",
+            "manufacturer": "Ricoxa93",
+            "model": "League of Legends Ranked Stats",
+        }
+
+
+class LeagueUpdateStatusSensor(LeagueBaseSensor):
+    _attr_name = "Update Status"
+    _attr_unique_id = "league_stats_update_status"
+    _attr_icon = "mdi:update"
+
+    @property
+    def native_value(self):
+        return "Aktuell" if self.coordinator.last_update_success else "Fehler"
+
 
 class LeagueTotalRankSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Rang"
-    _attr_unique_id = "league_of_legends_rank_total"
+    _attr_name = "Gesamt Rang"
+    _attr_unique_id = "league_stats_total_rank"
+    _attr_icon = "mdi:trophy"
 
     @property
     def native_value(self):
@@ -173,10 +199,10 @@ class LeagueTotalRankSensor(LeagueBaseSensor):
     @property
     def extra_state_attributes(self):
         return {
-            "wins_gesamt": self.coordinator.data["total"]["wins"],
-            "losses_gesamt": self.coordinator.data["total"]["losses"],
-            "spiele_gesamt": self.coordinator.data["total"]["games"],
-            "winrate_gesamt": self.coordinator.data["total"]["winrate"],
+            "wins": self.coordinator.data["total"]["wins"],
+            "losses": self.coordinator.data["total"]["losses"],
+            "spiele": self.coordinator.data["total"]["games"],
+            "winrate": self.coordinator.data["total"]["winrate"],
             "solo_rank": self.coordinator.data["solo"]["rank"],
             "solo_lp": self.coordinator.data["solo"]["lp"],
             "flex_rank": self.coordinator.data["flex"]["rank"],
@@ -185,8 +211,9 @@ class LeagueTotalRankSensor(LeagueBaseSensor):
 
 
 class LeagueTotalWinsSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Wins Gesamt"
-    _attr_unique_id = "league_of_legends_wins_total"
+    _attr_name = "Gesamt Wins"
+    _attr_unique_id = "league_stats_total_wins"
+    _attr_icon = "mdi:sword-cross"
 
     @property
     def native_value(self):
@@ -194,8 +221,9 @@ class LeagueTotalWinsSensor(LeagueBaseSensor):
 
 
 class LeagueTotalLossesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Losses Gesamt"
-    _attr_unique_id = "league_of_legends_losses_total"
+    _attr_name = "Gesamt Losses"
+    _attr_unique_id = "league_stats_total_losses"
+    _attr_icon = "mdi:skull"
 
     @property
     def native_value(self):
@@ -203,8 +231,9 @@ class LeagueTotalLossesSensor(LeagueBaseSensor):
 
 
 class LeagueTotalGamesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Spiele Gesamt"
-    _attr_unique_id = "league_of_legends_games_total"
+    _attr_name = "Gesamt Spiele"
+    _attr_unique_id = "league_stats_total_games"
+    _attr_icon = "mdi:controller-classic"
 
     @property
     def native_value(self):
@@ -212,8 +241,9 @@ class LeagueTotalGamesSensor(LeagueBaseSensor):
 
 
 class LeagueTotalWinrateSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Winrate Gesamt"
-    _attr_unique_id = "league_of_legends_winrate_total"
+    _attr_name = "Gesamt Winrate"
+    _attr_unique_id = "league_stats_total_winrate"
+    _attr_icon = "mdi:percent"
     _attr_native_unit_of_measurement = "%"
 
     @property
@@ -222,8 +252,9 @@ class LeagueTotalWinrateSensor(LeagueBaseSensor):
 
 
 class LeagueSoloRankSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ Rang"
-    _attr_unique_id = "league_of_legends_solo_rank"
+    _attr_name = "SoloQ Rang"
+    _attr_unique_id = "league_stats_solo_rank"
+    _attr_icon = "mdi:trophy"
 
     @property
     def native_value(self):
@@ -235,8 +266,9 @@ class LeagueSoloRankSensor(LeagueBaseSensor):
 
 
 class LeagueSoloLpSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ LP"
-    _attr_unique_id = "league_of_legends_solo_lp"
+    _attr_name = "SoloQ LP"
+    _attr_unique_id = "league_stats_solo_lp"
+    _attr_icon = "mdi:star-circle"
 
     @property
     def native_value(self):
@@ -244,8 +276,9 @@ class LeagueSoloLpSensor(LeagueBaseSensor):
 
 
 class LeagueSoloWinsSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ Wins"
-    _attr_unique_id = "league_of_legends_solo_wins"
+    _attr_name = "SoloQ Wins"
+    _attr_unique_id = "league_stats_solo_wins"
+    _attr_icon = "mdi:sword-cross"
 
     @property
     def native_value(self):
@@ -253,8 +286,9 @@ class LeagueSoloWinsSensor(LeagueBaseSensor):
 
 
 class LeagueSoloLossesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ Losses"
-    _attr_unique_id = "league_of_legends_solo_losses"
+    _attr_name = "SoloQ Losses"
+    _attr_unique_id = "league_stats_solo_losses"
+    _attr_icon = "mdi:skull"
 
     @property
     def native_value(self):
@@ -262,8 +296,9 @@ class LeagueSoloLossesSensor(LeagueBaseSensor):
 
 
 class LeagueSoloGamesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ Spiele"
-    _attr_unique_id = "league_of_legends_solo_games"
+    _attr_name = "SoloQ Spiele"
+    _attr_unique_id = "league_stats_solo_games"
+    _attr_icon = "mdi:controller-classic"
 
     @property
     def native_value(self):
@@ -271,8 +306,9 @@ class LeagueSoloGamesSensor(LeagueBaseSensor):
 
 
 class LeagueSoloWinrateSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends SoloQ Winrate"
-    _attr_unique_id = "league_of_legends_solo_winrate"
+    _attr_name = "SoloQ Winrate"
+    _attr_unique_id = "league_stats_solo_winrate"
+    _attr_icon = "mdi:percent"
     _attr_native_unit_of_measurement = "%"
 
     @property
@@ -281,8 +317,9 @@ class LeagueSoloWinrateSensor(LeagueBaseSensor):
 
 
 class LeagueFlexRankSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex Rang"
-    _attr_unique_id = "league_of_legends_flex_rank"
+    _attr_name = "Flex Rang"
+    _attr_unique_id = "league_stats_flex_rank"
+    _attr_icon = "mdi:account-group"
 
     @property
     def native_value(self):
@@ -294,8 +331,9 @@ class LeagueFlexRankSensor(LeagueBaseSensor):
 
 
 class LeagueFlexLpSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex LP"
-    _attr_unique_id = "league_of_legends_flex_lp"
+    _attr_name = "Flex LP"
+    _attr_unique_id = "league_stats_flex_lp"
+    _attr_icon = "mdi:star-circle-outline"
 
     @property
     def native_value(self):
@@ -303,8 +341,9 @@ class LeagueFlexLpSensor(LeagueBaseSensor):
 
 
 class LeagueFlexWinsSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex Wins"
-    _attr_unique_id = "league_of_legends_flex_wins"
+    _attr_name = "Flex Wins"
+    _attr_unique_id = "league_stats_flex_wins"
+    _attr_icon = "mdi:sword-cross"
 
     @property
     def native_value(self):
@@ -312,8 +351,9 @@ class LeagueFlexWinsSensor(LeagueBaseSensor):
 
 
 class LeagueFlexLossesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex Losses"
-    _attr_unique_id = "league_of_legends_flex_losses"
+    _attr_name = "Flex Losses"
+    _attr_unique_id = "league_stats_flex_losses"
+    _attr_icon = "mdi:skull-outline"
 
     @property
     def native_value(self):
@@ -321,8 +361,9 @@ class LeagueFlexLossesSensor(LeagueBaseSensor):
 
 
 class LeagueFlexGamesSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex Spiele"
-    _attr_unique_id = "league_of_legends_flex_games"
+    _attr_name = "Flex Spiele"
+    _attr_unique_id = "league_stats_flex_games"
+    _attr_icon = "mdi:controller-classic-outline"
 
     @property
     def native_value(self):
@@ -330,8 +371,9 @@ class LeagueFlexGamesSensor(LeagueBaseSensor):
 
 
 class LeagueFlexWinrateSensor(LeagueBaseSensor):
-    _attr_name = "League of Legends Flex Winrate"
-    _attr_unique_id = "league_of_legends_flex_winrate"
+    _attr_name = "Flex Winrate"
+    _attr_unique_id = "league_stats_flex_winrate"
+    _attr_icon = "mdi:percent-outline"
     _attr_native_unit_of_measurement = "%"
 
     @property
