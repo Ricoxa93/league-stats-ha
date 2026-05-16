@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=30)
 
 CHAMPION_CACHE = {}
+LATEST_DDRAGON_VERSION = None
 
 
 SENSOR_DESCRIPTIONS = [
@@ -153,6 +154,12 @@ SENSOR_DESCRIPTIONS = [
         "icon": "mdi:star-four-points",
         "path": ("top_champion", "points"),
     },
+    {
+        "key": "top_champion_icon",
+        "name": "Top Champion Icon",
+        "icon": "mdi:image",
+        "path": ("top_champion", "icon"),
+    },
 ]
 
 
@@ -226,12 +233,11 @@ def parse_queue(leagues, queue_type):
     }
 
 
-async def get_champion_name(session, champion_id):
-    if champion_id is None:
-        return "Unknown"
+async def get_latest_ddragon_version(session):
+    global LATEST_DDRAGON_VERSION
 
-    if champion_id in CHAMPION_CACHE:
-        return CHAMPION_CACHE[champion_id]
+    if LATEST_DDRAGON_VERSION:
+        return LATEST_DDRAGON_VERSION
 
     versions_url = "https://ddragon.leagueoflegends.com/api/versions.json"
 
@@ -239,7 +245,22 @@ async def get_champion_name(session, champion_id):
         resp.raise_for_status()
         versions = await resp.json()
 
-    latest_version = versions[0]
+    LATEST_DDRAGON_VERSION = versions[0]
+    return LATEST_DDRAGON_VERSION
+
+
+async def get_champion_data(session, champion_id):
+    if champion_id is None:
+        return {
+            "name": "Unknown",
+            "ddragon_id": None,
+            "icon": None,
+        }
+
+    if champion_id in CHAMPION_CACHE:
+        return CHAMPION_CACHE[champion_id]
+
+    latest_version = await get_latest_ddragon_version(session)
 
     champions_url = (
         f"https://ddragon.leagueoflegends.com/cdn/"
@@ -253,9 +274,28 @@ async def get_champion_name(session, champion_id):
     for champion in champions["data"].values():
         champ_key = int(champion["key"])
         champ_name = champion["name"]
-        CHAMPION_CACHE[champ_key] = champ_name
+        champ_ddragon_id = champion["id"]
 
-    return CHAMPION_CACHE.get(champion_id, f"Champion {champion_id}")
+        icon_url = (
+            f"https://ddragon.leagueoflegends.com/cdn/"
+            f"{latest_version}/img/champion/"
+            f"{champ_ddragon_id}.png"
+        )
+
+        CHAMPION_CACHE[champ_key] = {
+            "name": champ_name,
+            "ddragon_id": champ_ddragon_id,
+            "icon": icon_url,
+        }
+
+    return CHAMPION_CACHE.get(
+        champion_id,
+        {
+            "name": f"Champion {champion_id}",
+            "ddragon_id": None,
+            "icon": None,
+        },
+    )
 
 
 async def fetch_top_champion(session, api_key, platform, puuid):
@@ -280,17 +320,21 @@ async def fetch_top_champion(session, api_key, platform, puuid):
             "level": 0,
             "points": 0,
             "champion_id": None,
+            "ddragon_id": None,
+            "icon": None,
         }
 
     top = mastery[0]
     champion_id = top.get("championId")
-    champion_name = await get_champion_name(session, champion_id)
+    champion_data = await get_champion_data(session, champion_id)
 
     return {
-        "name": champion_name,
+        "name": champion_data["name"],
         "level": top.get("championLevel", 0),
         "points": top.get("championPoints", 0),
         "champion_id": champion_id,
+        "ddragon_id": champion_data["ddragon_id"],
+        "icon": champion_data["icon"],
     }
 
 
