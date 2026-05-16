@@ -24,12 +24,20 @@ QUEUE_NAMES = {
     430: "Normal Blind",
     440: "Ranked Flex",
     450: "ARAM",
+    490: "Quickplay",
+
     700: "Clash",
     720: "ARAM Clash",
+
+    830: "Co-op vs AI Intro",
+    840: "Co-op vs AI Beginner",
+    850: "Co-op vs AI Intermediate",
+
     900: "URF",
     1020: "One for All",
     1300: "Nexus Blitz",
     1400: "Ultimate Spellbook",
+
     1700: "Arena",
     1710: "Arena",
 }
@@ -129,7 +137,16 @@ def safe_slug(value):
 
 def format_seconds(seconds):
     seconds = int(seconds or 0)
-    return f"{seconds // 60}:{seconds % 60:02d}"
+
+    prefix = ""
+    if seconds < 0:
+        prefix = "Starting in "
+        seconds = abs(seconds)
+
+    minutes = seconds // 60
+    rest_seconds = seconds % 60
+
+    return f"{prefix}{minutes}:{rest_seconds:02d}"
 
 
 def make_opgg_url(platform, game_name, tag_line):
@@ -410,7 +427,7 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
         "account_slug": account_slug,
         "live": {
             "status": "In Game",
-            "queue": QUEUE_NAMES.get(queue_id, f"Queue {queue_id}"),
+            "queue": QUEUE_NAMES.get(queue_id, f"Custom Game ({queue_id})"),
             "queue_id": queue_id,
             "timer": format_seconds(game_length),
             "game_length": game_length,
