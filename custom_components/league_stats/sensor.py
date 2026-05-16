@@ -126,10 +126,8 @@ async def fetch_lol_data(
         account = await resp.json()
 
     puuid = account["puuid"]
-
-    account_slug = safe_slug(
-        f"{account.get('gameName')}#{account.get('tagLine')}"
-    )
+    account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
+    account_slug = safe_slug(account_name)
 
     league_url = (
         f"https://{platform}.api.riotgames.com"
@@ -148,6 +146,7 @@ async def fetch_lol_data(
     total_games = total_wins + total_losses
 
     return {
+        "account": account_name,
         "account_slug": account_slug,
 
         "solo": solo,
@@ -169,15 +168,13 @@ async def fetch_lol_data(
 class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = False
 
-    def __init__(self, coordinator, sensor_key):
+    def __init__(self, coordinator, sensor_type):
         super().__init__(coordinator)
 
-        account_slug = coordinator.data.get(
-            "account_slug",
-            "league_account"
-        )
+        account = coordinator.data.get("account", "league")
+        safe_account = safe_slug(account)
 
-        self._attr_unique_id = f"league_stats_{account_slug}_{sensor_key}"
+        self._attr_unique_id = f"league_stats_{safe_account}_{sensor_type}"
 
     @property
     def available(self):
@@ -188,13 +185,11 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def device_info(self):
-        account_slug = self.coordinator.data.get(
-            "account_slug",
-            "league_account"
-        )
+        account = self.coordinator.data.get("account", "League Account")
+        safe_account = safe_slug(account)
 
         return {
-            "identifiers": {("league_stats", account_slug)},
+            "identifiers": {("league_stats", safe_account)},
             "name": "League Stats",
             "manufacturer": "Ricoxa93",
             "model": "League of Legends Ranked Stats",
