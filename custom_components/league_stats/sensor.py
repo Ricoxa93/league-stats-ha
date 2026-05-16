@@ -4,7 +4,10 @@ import re
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    CoordinatorEntity,
+)
 
 from .const import (
     CONF_API_KEY,
@@ -46,7 +49,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([
         LeagueUpdateStatusSensor(coordinator),
 
-        LeagueTotalRankSensor(coordinator),
         LeagueTotalWinsSensor(coordinator),
         LeagueTotalLossesSensor(coordinator),
         LeagueTotalGamesSensor(coordinator),
@@ -149,7 +151,10 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
     total_wins = solo["wins"] + flex["wins"]
     total_losses = solo["losses"] + flex["losses"]
     total_games = total_wins + total_losses
-    total_win_rate = round((total_wins / total_games) * 100, 1) if total_games > 0 else 0
+    total_win_rate = (
+        round((total_wins / total_games) * 100, 1)
+        if total_games > 0 else 0
+    )
 
     return {
         "account": account_name,
@@ -157,12 +162,11 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
         "solo": solo,
         "flex": flex,
         "total": {
-            "rank": solo["rank"],
             "wins": total_wins,
             "losses": total_losses,
             "games": total_games,
             "win_rate": total_win_rate,
-        }
+        },
     }
 
 
@@ -173,7 +177,10 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         if coordinator.data:
-            account_slug = coordinator.data.get("account_slug", "league_account")
+            account_slug = coordinator.data.get(
+                "account_slug",
+                "league_account"
+            )
         else:
             account_slug = "league_account"
 
@@ -181,15 +188,22 @@ class LeagueBaseSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self):
-        return self.coordinator.last_update_success and self.coordinator.data is not None
+        return (
+            self.coordinator.last_update_success
+            and self.coordinator.data is not None
+        )
 
     @property
     def device_info(self):
-        account = self.coordinator.data.get("account", "League Account") if self.coordinator.data else "League Account"
+        account = (
+            self.coordinator.data.get("account", "League Account")
+            if self.coordinator.data
+            else "League Account"
+        )
 
         return {
             "identifiers": {("league_stats", account)},
-            "name": f"League Stats - {account}",
+            "name": account,
             "manufacturer": "Ricoxa93",
             "model": "League of Legends Ranked Stats",
         }
@@ -204,32 +218,11 @@ class LeagueUpdateStatusSensor(LeagueBaseSensor):
 
     @property
     def native_value(self):
-        return "Up to date" if self.coordinator.last_update_success else "Error"
-
-
-class LeagueTotalRankSensor(LeagueBaseSensor):
-    _attr_name = "Ranked Rank"
-    _attr_icon = "mdi:trophy"
-
-    def __init__(self, coordinator):
-        super().__init__(coordinator, "ranked_rank")
-
-    @property
-    def native_value(self):
-        return self.coordinator.data["total"]["rank"]
-
-    @property
-    def extra_state_attributes(self):
-        return {
-            "wins": self.coordinator.data["total"]["wins"],
-            "losses": self.coordinator.data["total"]["losses"],
-            "games": self.coordinator.data["total"]["games"],
-            "win_rate": self.coordinator.data["total"]["win_rate"],
-            "solo_queue_rank": self.coordinator.data["solo"]["rank"],
-            "solo_queue_lp": self.coordinator.data["solo"]["lp"],
-            "flex_queue_rank": self.coordinator.data["flex"]["rank"],
-            "flex_queue_lp": self.coordinator.data["flex"]["lp"],
-        }
+        return (
+            "Up to date"
+            if self.coordinator.last_update_success
+            else "Error"
+        )
 
 
 class LeagueTotalWinsSensor(LeagueBaseSensor):
