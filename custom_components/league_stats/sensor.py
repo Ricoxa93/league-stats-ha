@@ -861,6 +861,7 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "match_id": None,
                 "champion": None,
                 "champion_id": None,
+                "champion_level": None,
                 "role": None,
                 "kills": 0,
                 "deaths": 0,
@@ -932,6 +933,7 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "match_id": match_id,
                 "champion": None,
                 "champion_id": None,
+                "champion_level": None,
                 "role": None,
                 "kills": 0,
                 "deaths": 0,
@@ -1138,7 +1140,12 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
             "damage": last_match.get("damage"),
             "vision_score": last_match.get("vision_score"),
             "kill_participation": last_match.get("kill_participation"),
-            "icon": last_match.get("icon"),
+
+            # Wichtig:
+            # Nicht "icon" als Attribut nutzen, weil Home Assistant dieses Feld
+            # für das Entity-Icon verwendet. Daher sauber als champion_icon.
+            "champion_icon": last_match.get("icon"),
+
             "splash": last_match.get("splash"),
             "loading": last_match.get("loading"),
             "items": last_match.get("items"),
