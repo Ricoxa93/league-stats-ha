@@ -2,25 +2,93 @@ import logging
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-from .sensor import fetch_lol_data, fetch_live_data, SCAN_INTERVAL, LIVE_SCAN_INTERVAL
-from .const import CONF_API_KEY, CONF_GAME_NAME, CONF_TAG_LINE, CONF_PLATFORM, CONF_REGION
+from .sensor import (
+    fetch_lol_data,
+    fetch_live_data,
+    fetch_last_match_data,
+    SCAN_INTERVAL,
+    LIVE_SCAN_INTERVAL,
+    LAST_MATCH_SCAN_INTERVAL,
+)
+from .const import (
+    CONF_API_KEY,
+    CONF_GAME_NAME,
+    CONF_TAG_LINE,
+    CONF_PLATFORM,
+    CONF_REGION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 TOP_IMAGES = [
-    {"key": "top_champion_icon_image", "name": "Top Champion Icon", "path": ("top_champion", "icon"), "content_type": "image/png"},
-    {"key": "top_champion_splash_image", "name": "Top Champion Splash", "path": ("top_champion", "splash"), "content_type": "image/jpeg"},
-    {"key": "top_champion_loading_image", "name": "Top Champion Loading", "path": ("top_champion", "loading"), "content_type": "image/jpeg"},
+    {
+        "key": "top_champion_icon_image",
+        "name": "Top Champion Icon",
+        "path": ("top_champion", "icon"),
+        "content_type": "image/png",
+    },
+    {
+        "key": "top_champion_splash_image",
+        "name": "Top Champion Splash",
+        "path": ("top_champion", "splash"),
+        "content_type": "image/jpeg",
+    },
+    {
+        "key": "top_champion_loading_image",
+        "name": "Top Champion Loading",
+        "path": ("top_champion", "loading"),
+        "content_type": "image/jpeg",
+    },
 ]
 
 
 LIVE_IMAGES = [
-    {"key": "live_champion_icon_image", "name": "Live Champion Icon", "path": ("live", "current_champion", "icon"), "content_type": "image/png"},
-    {"key": "live_champion_splash_image", "name": "Live Champion Splash", "path": ("live", "current_champion", "splash"), "content_type": "image/jpeg"},
-    {"key": "live_champion_loading_image", "name": "Live Champion Loading", "path": ("live", "current_champion", "loading"), "content_type": "image/jpeg"},
+    {
+        "key": "live_champion_icon_image",
+        "name": "Live Champion Icon",
+        "path": ("live", "current_champion", "icon"),
+        "content_type": "image/png",
+    },
+    {
+        "key": "live_champion_splash_image",
+        "name": "Live Champion Splash",
+        "path": ("live", "current_champion", "splash"),
+        "content_type": "image/jpeg",
+    },
+    {
+        "key": "live_champion_loading_image",
+        "name": "Live Champion Loading",
+        "path": ("live", "current_champion", "loading"),
+        "content_type": "image/jpeg",
+    },
+]
+
+
+LAST_MATCH_IMAGES = [
+    {
+        "key": "last_match_icon_image",
+        "name": "Last Match Icon",
+        "path": ("last_match", "icon"),
+        "content_type": "image/png",
+    },
+    {
+        "key": "last_match_splash_image",
+        "name": "Last Match Splash",
+        "path": ("last_match", "splash"),
+        "content_type": "image/jpeg",
+    },
+    {
+        "key": "last_match_loading_image",
+        "name": "Last Match Loading",
+        "path": ("last_match", "loading"),
+        "content_type": "image/jpeg",
+    },
 ]
 
 
@@ -32,7 +100,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hass,
         _LOGGER,
         name="league_stats_image",
-        update_method=lambda: fetch_lol_data(session, config[CONF_API_KEY], config[CONF_GAME_NAME], config[CONF_TAG_LINE], config[CONF_PLATFORM], config[CONF_REGION]),
+        update_method=lambda: fetch_lol_data(
+            session,
+            config[CONF_API_KEY],
+            config[CONF_GAME_NAME],
+            config[CONF_TAG_LINE],
+            config[CONF_PLATFORM],
+            config[CONF_REGION],
+        ),
         update_interval=SCAN_INTERVAL,
     )
 
@@ -40,16 +115,40 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hass,
         _LOGGER,
         name="league_stats_live_image",
-        update_method=lambda: fetch_live_data(session, config[CONF_API_KEY], config[CONF_GAME_NAME], config[CONF_TAG_LINE], config[CONF_PLATFORM], config[CONF_REGION]),
+        update_method=lambda: fetch_live_data(
+            session,
+            config[CONF_API_KEY],
+            config[CONF_GAME_NAME],
+            config[CONF_TAG_LINE],
+            config[CONF_PLATFORM],
+            config[CONF_REGION],
+        ),
         update_interval=LIVE_SCAN_INTERVAL,
+    )
+
+    last_match_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="league_stats_last_match_image",
+        update_method=lambda: fetch_last_match_data(
+            session,
+            config[CONF_API_KEY],
+            config[CONF_GAME_NAME],
+            config[CONF_TAG_LINE],
+            config[CONF_PLATFORM],
+            config[CONF_REGION],
+        ),
+        update_interval=LAST_MATCH_SCAN_INTERVAL,
     )
 
     await top_coordinator.async_config_entry_first_refresh()
     await live_coordinator.async_config_entry_first_refresh()
+    await last_match_coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         [LeagueImage(top_coordinator, d) for d in TOP_IMAGES]
         + [LeagueImage(live_coordinator, d) for d in LIVE_IMAGES]
+        + [LeagueImage(last_match_coordinator, d) for d in LAST_MATCH_IMAGES]
     )
 
 
@@ -74,6 +173,7 @@ class LeagueImage(CoordinatorEntity, ImageEntity):
         for part in self.description["path"]:
             if data is None:
                 return None
+
             data = data.get(part)
 
         return data
@@ -93,7 +193,10 @@ class LeagueImage(CoordinatorEntity, ImageEntity):
     @property
     def device_info(self):
         account = self.coordinator.data.get("account", "League Account")
-        account_slug = self.coordinator.data.get("account_slug", "league_account")
+        account_slug = self.coordinator.data.get(
+            "account_slug",
+            "league_account",
+        )
 
         return {
             "identifiers": {("league_stats", account_slug)},
