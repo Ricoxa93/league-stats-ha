@@ -127,6 +127,25 @@ LAST_MATCH_SENSORS = [
 ]
 
 
+LAST_MATCH_PLAYER_SENSORS = []
+
+for team_key, team_name in [
+    ("blue_team", "Blue"),
+    ("red_team", "Red"),
+]:
+    for index in range(5):
+        number = index + 1
+        LAST_MATCH_PLAYER_SENSORS.append(
+            {
+                "key": f"last_match_{team_key}_{number}",
+                "name": f"Last Match {team_name} Player {number}",
+                "icon": "mdi:account",
+                "team_key": team_key,
+                "index": index,
+            }
+        )
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     config = entry.data
     session = async_get_clientsession(hass)
@@ -184,6 +203,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         [LeagueStatsSensor(ranked_coordinator, d) for d in RANKED_SENSORS]
         + [LeagueLiveSensor(live_coordinator, d) for d in LIVE_SENSORS]
         + [LeagueLastMatchSensor(last_match_coordinator, d) for d in LAST_MATCH_SENSORS]
+        + [LeagueLastMatchPlayerSensor(last_match_coordinator, d) for d in LAST_MATCH_PLAYER_SENSORS]
     )
 
 
@@ -1140,12 +1160,7 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
             "damage": last_match.get("damage"),
             "vision_score": last_match.get("vision_score"),
             "kill_participation": last_match.get("kill_participation"),
-
-            # Wichtig:
-            # Nicht "icon" als Attribut nutzen, weil Home Assistant dieses Feld
-            # für das Entity-Icon verwendet. Daher sauber als champion_icon.
             "champion_icon": last_match.get("icon"),
-
             "splash": last_match.get("splash"),
             "loading": last_match.get("loading"),
             "items": last_match.get("items"),
@@ -1154,4 +1169,70 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
             "secondary_rune": last_match.get("secondary_rune"),
             "blue_team": last_match.get("blue_team"),
             "red_team": last_match.get("red_team"),
+        }
+
+
+class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
+    def __init__(self, coordinator, description):
+        super().__init__(coordinator)
+        self.description = description
+
+        account_slug = coordinator.data.get("account_slug", "league_account")
+
+        self._attr_name = description["name"]
+        self._attr_unique_id = f"league_stats_{account_slug}_{description['key']}"
+        self._attr_icon = description.get("icon")
+
+    def _player(self):
+        data = self.coordinator.data or {}
+        last_match = data.get("last_match", {})
+        team = last_match.get(self.description["team_key"], [])
+        index = self.description["index"]
+
+        if index >= len(team):
+            return None
+
+        return team[index]
+
+    @property
+    def native_value(self):
+        player = self._player()
+
+        if not player:
+            return "Unavailable"
+
+        return player.get("name") or "Unknown"
+
+    @property
+    def extra_state_attributes(self):
+        player = self._player()
+
+        if not player:
+            return {}
+
+        return {
+            "name": player.get("name"),
+            "champion": player.get("champion"),
+            "champion_id": player.get("champion_id"),
+            "champion_level": player.get("champion_level"),
+            "role": player.get("role"),
+            "kills": player.get("kills"),
+            "deaths": player.get("deaths"),
+            "assists": player.get("assists"),
+            "kda": player.get("kda"),
+            "cs": player.get("cs"),
+            "cs_per_min": player.get("cs_per_min"),
+            "gold": player.get("gold"),
+            "damage": player.get("damage"),
+            "vision_score": player.get("vision_score"),
+            "kill_participation": player.get("kill_participation"),
+            "win": player.get("win"),
+            "team_id": player.get("team_id"),
+            "items": player.get("items"),
+            "summoner_spells": player.get("summoner_spells"),
+            "primary_rune": player.get("primary_rune"),
+            "secondary_rune": player.get("secondary_rune"),
+            "champion_icon": player.get("icon"),
+            "splash": player.get("splash"),
+            "loading": player.get("loading"),
         }
