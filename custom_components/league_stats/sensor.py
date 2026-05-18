@@ -25,6 +25,8 @@ LIVE_SCAN_INTERVAL = timedelta(seconds=60)
 LAST_MATCH_SCAN_INTERVAL = timedelta(minutes=5)
 
 CHAMPION_CACHE = {}
+SUMMONER_SPELL_CACHE = {}
+RUNE_CACHE = {}
 LATEST_DDRAGON_VERSION = None
 
 
@@ -200,10 +202,7 @@ def format_seconds(seconds):
         prefix = "Starting in "
         seconds = abs(seconds)
 
-    minutes = seconds // 60
-    rest_seconds = seconds % 60
-
-    return f"{prefix}{minutes}:{rest_seconds:02d}"
+    return f"{prefix}{seconds // 60}:{seconds % 60:02d}"
 
 
 def format_duration(seconds):
@@ -338,6 +337,86 @@ async def get_champion_data(session, champion_id):
             "loading": None,
         },
     )
+
+
+def get_item_icon_url(version, item_id):
+    if not item_id or item_id == 0:
+        return None
+
+    return (
+        f"https://ddragon.leagueoflegends.com/cdn/"
+        f"{version}/img/item/{item_id}.png"
+    )
+
+
+async def get_summoner_spell_data(session, spell_id):
+    if not spell_id:
+        return None
+
+    if spell_id in SUMMONER_SPELL_CACHE:
+        return SUMMONER_SPELL_CACHE[spell_id]
+
+    latest_version = await get_latest_ddragon_version(session)
+
+    spells_url = (
+        f"https://ddragon.leagueoflegends.com/cdn/"
+        f"{latest_version}/data/en_US/summoner.json"
+    )
+
+    async with session.get(spells_url) as resp:
+        resp.raise_for_status()
+        spells = await resp.json()
+
+    for spell in spells["data"].values():
+        key = int(spell["key"])
+        image = spell["image"]["full"]
+
+        SUMMONER_SPELL_CACHE[key] = {
+            "id": key,
+            "name": spell["name"],
+            "icon": (
+                f"https://ddragon.leagueoflegends.com/cdn/"
+                f"{latest_version}/img/spell/{image}"
+            ),
+        }
+
+    return SUMMONER_SPELL_CACHE.get(spell_id)
+
+
+async def get_rune_data(session, rune_id):
+    if not rune_id:
+        return None
+
+    if rune_id in RUNE_CACHE:
+        return RUNE_CACHE[rune_id]
+
+    latest_version = await get_latest_ddragon_version(session)
+
+    runes_url = (
+        f"https://ddragon.leagueoflegends.com/cdn/"
+        f"{latest_version}/data/en_US/runesReforged.json"
+    )
+
+    async with session.get(runes_url) as resp:
+        resp.raise_for_status()
+        rune_styles = await resp.json()
+
+    for style in rune_styles:
+        RUNE_CACHE[style["id"]] = {
+            "id": style["id"],
+            "name": style["name"],
+            "icon": f"https://ddragon.leagueoflegends.com/cdn/img/{style['icon']}",
+        }
+
+        for slot in style.get("slots", []):
+            for rune in slot.get("runes", []):
+                RUNE_CACHE[rune["id"]] = {
+                    "id": rune["id"],
+                    "name": rune["name"],
+                    "icon": f"https://ddragon.leagueoflegends.com/cdn/img/{rune['icon']}",
+                }
+
+    return RUNE_CACHE.get(rune_id)
 
 
 async def fetch_top_champion(session, api_key, platform, puuid):
@@ -637,7 +716,9 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
     }
 
 
-async def enrich_match_participant(session, participant):
+async def enrich_match_participant(session, participant, game_duration):
+    latest_version = await get_latest_ddragon_version(session)
+
     champion_id = participant.get("championId")
     champion = await get_champion_data(session, champion_id)
 
@@ -648,10 +729,7 @@ async def enrich_match_participant(session, participant):
     )
     tag_line = participant.get("riotIdTagline")
 
-    if tag_line:
-        name = f"{game_name}#{tag_line}"
-    else:
-        name = game_name
+    name = f"{game_name}#{tag_line}" if tag_line else game_name
 
     kills = participant.get("kills", 0)
     deaths = participant.get("deaths", 0)
@@ -662,10 +740,69 @@ async def enrich_match_participant(session, participant):
         + participant.get("neutralMinionsKilled", 0)
     )
 
+    minutes = max((game_duration or 0) / 60, 1)
+    cs_per_min = round(cs / minutes, 1)
+
+    challenges = participant.get("challenges", {}) or {}
+    kill_participation = challenges.get("killParticipation")
+
+    if kill_participation is not None:
+        kill_participation = round(kill_participation * 100, 1)
+
+    item_ids = [
+        participant.get("item0", 0),
+        participant.get("item1", 0),
+        participant.get("item2", 0),
+        participant.get("item3", 0),
+        participant.get("item4", 0),
+        participant.get("item5", 0),
+        participant.get("item6", 0),
+    ]
+
+    items = [
+        {
+            "id": item_id,
+            "icon": get_item_icon_url(latest_version, item_id),
+        }
+        for item_id in item_ids
+        if item_id and item_id != 0
+    ]
+
+    spell1 = await get_summoner_spell_data(
+        session,
+        participant.get("summoner1Id"),
+    )
+    spell2 = await get_summoner_spell_data(
+        session,
+        participant.get("summoner2Id"),
+    )
+
+    perks = participant.get("perks", {}) or {}
+    styles = perks.get("styles", []) or []
+
+    primary_rune = None
+    secondary_rune = None
+
+    if len(styles) > 0:
+        selections = styles[0].get("selections", []) or []
+
+        if selections:
+            primary_rune = await get_rune_data(
+                session,
+                selections[0].get("perk"),
+            )
+
+    if len(styles) > 1:
+        secondary_rune = await get_rune_data(
+            session,
+            styles[1].get("style"),
+        )
+
     return {
         "name": name,
         "champion": participant.get("championName") or champion["name"],
         "champion_id": champion_id,
+        "champion_level": participant.get("champLevel", 0),
         "role": format_role(
             participant.get("teamPosition")
             or participant.get("individualPosition")
@@ -675,11 +812,17 @@ async def enrich_match_participant(session, participant):
         "assists": assists,
         "kda": calculate_kda(kills, deaths, assists),
         "cs": cs,
+        "cs_per_min": cs_per_min,
         "gold": participant.get("goldEarned", 0),
         "damage": participant.get("totalDamageDealtToChampions", 0),
         "vision_score": participant.get("visionScore", 0),
+        "kill_participation": kill_participation,
         "win": participant.get("win", False),
         "team_id": participant.get("teamId"),
+        "items": items,
+        "summoner_spells": [spell for spell in [spell1, spell2] if spell],
+        "primary_rune": primary_rune,
+        "secondary_rune": secondary_rune,
         "icon": champion["icon"],
         "splash": champion["splash"],
         "loading": champion["loading"],
@@ -724,9 +867,11 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "assists": 0,
                 "kda": 0,
                 "cs": 0,
+                "cs_per_min": 0,
                 "gold": 0,
                 "damage": 0,
                 "vision_score": 0,
+                "kill_participation": None,
                 "duration": None,
                 "queue": None,
                 "game_mode": None,
@@ -734,6 +879,10 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "icon": None,
                 "splash": None,
                 "loading": None,
+                "items": [],
+                "summoner_spells": [],
+                "primary_rune": None,
+                "secondary_rune": None,
                 "blue_team": [],
                 "red_team": [],
             },
@@ -752,6 +901,7 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
 
     info = match.get("info", {})
     participants = info.get("participants", [])
+    game_duration = info.get("gameDuration", 0)
 
     own = next((p for p in participants if p.get("puuid") == puuid), None)
 
@@ -759,7 +909,11 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
     red_team = []
 
     for participant in participants:
-        player = await enrich_match_participant(session, participant)
+        player = await enrich_match_participant(
+            session,
+            participant,
+            game_duration,
+        )
 
         if player["team_id"] == 100:
             blue_team.append(player)
@@ -767,7 +921,7 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
             red_team.append(player)
 
     queue_id = info.get("queueId")
-    duration = format_duration(info.get("gameDuration", 0))
+    duration = format_duration(game_duration)
 
     if not own:
         return {
@@ -784,9 +938,11 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "assists": 0,
                 "kda": 0,
                 "cs": 0,
+                "cs_per_min": 0,
                 "gold": 0,
                 "damage": 0,
                 "vision_score": 0,
+                "kill_participation": None,
                 "duration": duration,
                 "queue": QUEUE_NAMES.get(queue_id, f"Custom Game ({queue_id})"),
                 "game_mode": info.get("gameMode"),
@@ -794,18 +950,20 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "icon": None,
                 "splash": None,
                 "loading": None,
+                "items": [],
+                "summoner_spells": [],
+                "primary_rune": None,
+                "secondary_rune": None,
                 "blue_team": blue_team,
                 "red_team": red_team,
             },
         }
 
-    kills = own.get("kills", 0)
-    deaths = own.get("deaths", 0)
-    assists = own.get("assists", 0)
-
-    cs = own.get("totalMinionsKilled", 0) + own.get("neutralMinionsKilled", 0)
-    champion_id = own.get("championId")
-    champion = await get_champion_data(session, champion_id)
+    own_enriched = await enrich_match_participant(
+        session,
+        own,
+        game_duration,
+    )
 
     return {
         "account": account_name,
@@ -813,27 +971,31 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
         "last_match": {
             "result": "Victory" if own.get("win") else "Defeat",
             "match_id": match_id,
-            "champion": own.get("championName") or champion["name"],
-            "champion_id": champion_id,
-            "role": format_role(
-                own.get("teamPosition")
-                or own.get("individualPosition")
-            ),
-            "kills": kills,
-            "deaths": deaths,
-            "assists": assists,
-            "kda": calculate_kda(kills, deaths, assists),
-            "cs": cs,
-            "gold": own.get("goldEarned", 0),
-            "damage": own.get("totalDamageDealtToChampions", 0),
-            "vision_score": own.get("visionScore", 0),
+            "champion": own_enriched["champion"],
+            "champion_id": own_enriched["champion_id"],
+            "champion_level": own_enriched["champion_level"],
+            "role": own_enriched["role"],
+            "kills": own_enriched["kills"],
+            "deaths": own_enriched["deaths"],
+            "assists": own_enriched["assists"],
+            "kda": own_enriched["kda"],
+            "cs": own_enriched["cs"],
+            "cs_per_min": own_enriched["cs_per_min"],
+            "gold": own_enriched["gold"],
+            "damage": own_enriched["damage"],
+            "vision_score": own_enriched["vision_score"],
+            "kill_participation": own_enriched["kill_participation"],
             "duration": duration,
             "queue": QUEUE_NAMES.get(queue_id, f"Custom Game ({queue_id})"),
             "game_mode": info.get("gameMode"),
             "game_type": info.get("gameType"),
-            "icon": champion["icon"],
-            "splash": champion["splash"],
-            "loading": champion["loading"],
+            "icon": own_enriched["icon"],
+            "splash": own_enriched["splash"],
+            "loading": own_enriched["loading"],
+            "items": own_enriched["items"],
+            "summoner_spells": own_enriched["summoner_spells"],
+            "primary_rune": own_enriched["primary_rune"],
+            "secondary_rune": own_enriched["secondary_rune"],
             "blue_team": blue_team,
             "red_team": red_team,
         },
@@ -964,18 +1126,25 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
             "game_type": last_match.get("game_type"),
             "champion": last_match.get("champion"),
             "champion_id": last_match.get("champion_id"),
+            "champion_level": last_match.get("champion_level"),
             "role": last_match.get("role"),
             "kills": last_match.get("kills"),
             "deaths": last_match.get("deaths"),
             "assists": last_match.get("assists"),
             "kda": last_match.get("kda"),
             "cs": last_match.get("cs"),
+            "cs_per_min": last_match.get("cs_per_min"),
             "gold": last_match.get("gold"),
             "damage": last_match.get("damage"),
             "vision_score": last_match.get("vision_score"),
+            "kill_participation": last_match.get("kill_participation"),
             "icon": last_match.get("icon"),
             "splash": last_match.get("splash"),
             "loading": last_match.get("loading"),
+            "items": last_match.get("items"),
+            "summoner_spells": last_match.get("summoner_spells"),
+            "primary_rune": last_match.get("primary_rune"),
+            "secondary_rune": last_match.get("secondary_rune"),
             "blue_team": last_match.get("blue_team"),
             "red_team": last_match.get("red_team"),
         }
