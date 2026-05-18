@@ -66,7 +66,6 @@ OPGG_REGIONS = {
 
 RANKED_SENSORS = [
     {"key": "update_status", "name": "Update Status", "icon": "mdi:update", "path": ("status",)},
-
     {"key": "ranked_wins", "name": "Ranked Wins", "icon": "mdi:sword-cross", "path": ("total", "wins")},
     {"key": "ranked_losses", "name": "Ranked Losses", "icon": "mdi:skull", "path": ("total", "losses")},
     {"key": "ranked_games", "name": "Ranked Games", "icon": "mdi:controller-classic", "path": ("total", "games")},
@@ -217,6 +216,18 @@ def calculate_kda(kills, deaths, assists):
         return round(kills + assists, 2)
 
     return round((kills + assists) / deaths, 2)
+
+
+def format_role(role):
+    role_names = {
+        "TOP": "Top",
+        "JUNGLE": "Jungle",
+        "MIDDLE": "Mid",
+        "BOTTOM": "Bot",
+        "UTILITY": "Support",
+    }
+
+    return role_names.get(role, role or "Unknown")
 
 
 def make_opgg_url(platform, game_name, tag_line):
@@ -655,10 +666,9 @@ async def enrich_match_participant(session, participant):
         "name": name,
         "champion": participant.get("championName") or champion["name"],
         "champion_id": champion_id,
-        "role": (
+        "role": format_role(
             participant.get("teamPosition")
             or participant.get("individualPosition")
-            or "UNKNOWN"
         ),
         "kills": kills,
         "deaths": deaths,
@@ -805,10 +815,9 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
             "match_id": match_id,
             "champion": own.get("championName") or champion["name"],
             "champion_id": champion_id,
-            "role": (
+            "role": format_role(
                 own.get("teamPosition")
                 or own.get("individualPosition")
-                or "UNKNOWN"
             ),
             "kills": kills,
             "deaths": deaths,
