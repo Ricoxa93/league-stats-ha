@@ -23,12 +23,13 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=30)
 LIVE_SCAN_INTERVAL = timedelta(seconds=60)
 LAST_MATCH_SCAN_INTERVAL = timedelta(minutes=5)
+MATCH_HISTORY_COUNT = 5
 
 CHAMPION_CACHE = {}
 SUMMONER_SPELL_CACHE = {}
 RUNE_CACHE = {}
+PLAYER_RANK_CACHE = {}
 LATEST_DDRAGON_VERSION = None
-
 
 QUEUE_NAMES = {
     400: "Normal Draft",
@@ -50,7 +51,6 @@ QUEUE_NAMES = {
     1710: "Arena",
 }
 
-
 OPGG_REGIONS = {
     "euw1": "euw",
     "eun1": "eune",
@@ -65,28 +65,24 @@ OPGG_REGIONS = {
     "ru": "ru",
 }
 
-
 RANKED_SENSORS = [
     {"key": "update_status", "name": "Update Status", "icon": "mdi:update", "path": ("status",)},
     {"key": "ranked_wins", "name": "Ranked Wins", "icon": "mdi:sword-cross", "path": ("total", "wins")},
     {"key": "ranked_losses", "name": "Ranked Losses", "icon": "mdi:skull", "path": ("total", "losses")},
     {"key": "ranked_games", "name": "Ranked Games", "icon": "mdi:controller-classic", "path": ("total", "games")},
     {"key": "ranked_win_rate", "name": "Ranked Win Rate", "icon": "mdi:percent", "unit": PERCENTAGE, "path": ("total", "win_rate")},
-
     {"key": "soloq_rank", "name": "SoloQ Rank", "icon": "mdi:trophy-outline", "path": ("solo", "rank")},
     {"key": "soloq_lp", "name": "SoloQ LP", "icon": "mdi:star-circle", "path": ("solo", "lp")},
     {"key": "soloq_wins", "name": "SoloQ Wins", "icon": "mdi:sword-cross", "path": ("solo", "wins")},
     {"key": "soloq_losses", "name": "SoloQ Losses", "icon": "mdi:skull-outline", "path": ("solo", "losses")},
     {"key": "soloq_games", "name": "SoloQ Games", "icon": "mdi:controller-classic-outline", "path": ("solo", "games")},
     {"key": "soloq_win_rate", "name": "SoloQ Win Rate", "icon": "mdi:percent-outline", "unit": PERCENTAGE, "path": ("solo", "win_rate")},
-
     {"key": "flex_rank", "name": "Flex Rank", "icon": "mdi:account-group", "path": ("flex", "rank")},
     {"key": "flex_lp", "name": "Flex LP", "icon": "mdi:star-circle-outline", "path": ("flex", "lp")},
     {"key": "flex_wins", "name": "Flex Wins", "icon": "mdi:account-multiple-check", "path": ("flex", "wins")},
     {"key": "flex_losses", "name": "Flex Losses", "icon": "mdi:account-multiple-remove", "path": ("flex", "losses")},
     {"key": "flex_games", "name": "Flex Games", "icon": "mdi:controller-classic", "path": ("flex", "games")},
     {"key": "flex_win_rate", "name": "Flex Win Rate", "icon": "mdi:percent", "unit": PERCENTAGE, "path": ("flex", "win_rate")},
-
     {"key": "top_champion", "name": "Top Champion", "icon": "mdi:account-star", "path": ("top_champion", "name")},
     {"key": "top_champion_level", "name": "Top Champion Level", "icon": "mdi:chevron-up-circle", "path": ("top_champion", "level")},
     {"key": "top_champion_points", "name": "Top Champion Points", "icon": "mdi:star-four-points", "path": ("top_champion", "points")},
@@ -94,7 +90,6 @@ RANKED_SENSORS = [
     {"key": "top_champion_splash", "name": "Top Champion Splash", "icon": "mdi:image-area", "path": ("top_champion", "splash")},
     {"key": "top_champion_loading", "name": "Top Champion Loading", "icon": "mdi:image-frame", "path": ("top_champion", "loading")},
 ]
-
 
 LIVE_SENSORS = [
     {"key": "live_match", "name": "Live Match", "icon": "mdi:sword", "path": ("live", "status")},
@@ -106,39 +101,68 @@ LIVE_SENSORS = [
     {"key": "live_champion_loading", "name": "Live Champion Loading", "icon": "mdi:image-frame", "path": ("live", "current_champion", "loading")},
 ]
 
-
-LAST_MATCH_SENSORS = [
-    {"key": "last_match", "name": "Last Match", "icon": "mdi:history", "path": ("last_match", "result")},
-    {"key": "last_match_champion", "name": "Last Match Champion", "icon": "mdi:account-star", "path": ("last_match", "champion")},
-    {"key": "last_match_role", "name": "Last Match Role", "icon": "mdi:account-switch", "path": ("last_match", "role")},
-    {"key": "last_match_kda", "name": "Last Match KDA", "icon": "mdi:chart-line", "path": ("last_match", "kda")},
-    {"key": "last_match_kills", "name": "Last Match Kills", "icon": "mdi:sword", "path": ("last_match", "kills")},
-    {"key": "last_match_deaths", "name": "Last Match Deaths", "icon": "mdi:skull", "path": ("last_match", "deaths")},
-    {"key": "last_match_assists", "name": "Last Match Assists", "icon": "mdi:handshake", "path": ("last_match", "assists")},
-    {"key": "last_match_cs", "name": "Last Match CS", "icon": "mdi:grain", "path": ("last_match", "cs")},
-    {"key": "last_match_gold", "name": "Last Match Gold", "icon": "mdi:gold", "path": ("last_match", "gold")},
-    {"key": "last_match_damage", "name": "Last Match Damage", "icon": "mdi:fire", "path": ("last_match", "damage")},
-    {"key": "last_match_vision", "name": "Last Match Vision Score", "icon": "mdi:eye", "path": ("last_match", "vision_score")},
-    {"key": "last_match_duration", "name": "Last Match Duration", "icon": "mdi:timer", "path": ("last_match", "duration")},
-    {"key": "last_match_queue", "name": "Last Match Queue", "icon": "mdi:format-list-bulleted", "path": ("last_match", "queue")},
-    {"key": "last_match_blue_dragons", "name": "Last Match Blue Dragons", "icon": "mdi:dragon", "path": ("last_match", "blue_dragons")},
-    {"key": "last_match_red_dragons", "name": "Last Match Red Dragons", "icon": "mdi:dragon", "path": ("last_match", "red_dragons")},
-    {"key": "last_match_blue_barons", "name": "Last Match Blue Barons", "icon": "mdi:shield-crown", "path": ("last_match", "blue_barons")},
-    {"key": "last_match_red_barons", "name": "Last Match Red Barons", "icon": "mdi:shield-crown", "path": ("last_match", "red_barons")},
-    {"key": "last_match_blue_towers", "name": "Last Match Blue Towers", "icon": "mdi:tower-fire", "path": ("last_match", "blue_towers")},
-    {"key": "last_match_red_towers", "name": "Last Match Red Towers", "icon": "mdi:tower-fire", "path": ("last_match", "red_towers")},
-    {"key": "last_match_icon", "name": "Last Match Icon", "icon": "mdi:image", "path": ("last_match", "icon")},
-    {"key": "last_match_splash", "name": "Last Match Splash", "icon": "mdi:image-area", "path": ("last_match", "splash")},
-    {"key": "last_match_loading", "name": "Last Match Loading", "icon": "mdi:image-frame", "path": ("last_match", "loading")},
+MATCH_FIELD_SENSORS = [
+    {"suffix": "", "name_suffix": "", "icon": "mdi:history", "field": "result"},
+    {"suffix": "champion", "name_suffix": "Champion", "icon": "mdi:account-star", "field": "champion"},
+    {"suffix": "role", "name_suffix": "Role", "icon": "mdi:account-switch", "field": "role"},
+    {"suffix": "kda", "name_suffix": "KDA", "icon": "mdi:chart-line", "field": "kda"},
+    {"suffix": "kills", "name_suffix": "Kills", "icon": "mdi:sword", "field": "kills"},
+    {"suffix": "deaths", "name_suffix": "Deaths", "icon": "mdi:skull", "field": "deaths"},
+    {"suffix": "assists", "name_suffix": "Assists", "icon": "mdi:handshake", "field": "assists"},
+    {"suffix": "cs", "name_suffix": "CS", "icon": "mdi:grain", "field": "cs"},
+    {"suffix": "gold", "name_suffix": "Gold", "icon": "mdi:gold", "field": "gold"},
+    {"suffix": "damage", "name_suffix": "Damage", "icon": "mdi:fire", "field": "damage"},
+    {"suffix": "vision", "name_suffix": "Vision Score", "icon": "mdi:eye", "field": "vision_score"},
+    {"suffix": "duration", "name_suffix": "Duration", "icon": "mdi:timer", "field": "duration"},
+    {"suffix": "queue", "name_suffix": "Queue", "icon": "mdi:format-list-bulleted", "field": "queue"},
+    {"suffix": "blue_dragons", "name_suffix": "Blue Dragons", "icon": "mdi:dragon", "field": "blue_dragons"},
+    {"suffix": "red_dragons", "name_suffix": "Red Dragons", "icon": "mdi:dragon", "field": "red_dragons"},
+    {"suffix": "blue_barons", "name_suffix": "Blue Barons", "icon": "mdi:shield-crown", "field": "blue_barons"},
+    {"suffix": "red_barons", "name_suffix": "Red Barons", "icon": "mdi:shield-crown", "field": "red_barons"},
+    {"suffix": "blue_towers", "name_suffix": "Blue Towers", "icon": "mdi:tower-fire", "field": "blue_towers"},
+    {"suffix": "red_towers", "name_suffix": "Red Towers", "icon": "mdi:tower-fire", "field": "red_towers"},
+    {"suffix": "icon", "name_suffix": "Icon", "icon": "mdi:image", "field": "icon"},
+    {"suffix": "splash", "name_suffix": "Splash", "icon": "mdi:image-area", "field": "splash"},
+    {"suffix": "loading", "name_suffix": "Loading", "icon": "mdi:image-frame", "field": "loading"},
 ]
 
+LAST_MATCH_SENSORS = []
+for item in MATCH_FIELD_SENSORS:
+    key = "last_match" if item["suffix"] == "" else f"last_match_{item['suffix']}"
+    name = "Last Match" if item["name_suffix"] == "" else f"Last Match {item['name_suffix']}"
+    LAST_MATCH_SENSORS.append(
+        {
+            "key": key,
+            "name": name,
+            "icon": item["icon"],
+            "path": ("last_match", item["field"]),
+            "match_key": "last_match",
+        }
+    )
+
+MATCH_SENSORS = []
+for match_index in range(MATCH_HISTORY_COUNT):
+    match_number = match_index + 1
+    match_key = f"match_{match_number}"
+
+    for item in MATCH_FIELD_SENSORS:
+        key = match_key if item["suffix"] == "" else f"{match_key}_{item['suffix']}"
+        name = f"Match {match_number}" if item["name_suffix"] == "" else f"Match {match_number} {item['name_suffix']}"
+        MATCH_SENSORS.append(
+            {
+                "key": key,
+                "name": name,
+                "icon": item["icon"],
+                "path": (match_key, item["field"]),
+                "match_key": match_key,
+                "match_index": match_index,
+            }
+        )
 
 LAST_MATCH_PLAYER_SENSORS = []
+MATCH_PLAYER_SENSORS = []
 
-for team_key, team_name in [
-    ("blue_team", "Blue"),
-    ("red_team", "Red"),
-]:
+for team_key, team_name in [("blue_team", "Blue"), ("red_team", "Red")]:
     for index in range(5):
         number = index + 1
         LAST_MATCH_PLAYER_SENSORS.append(
@@ -146,10 +170,30 @@ for team_key, team_name in [
                 "key": f"last_match_{team_key}_{number}",
                 "name": f"Last Match {team_name} Player {number}",
                 "icon": "mdi:account",
+                "match_key": "last_match",
                 "team_key": team_key,
                 "index": index,
             }
         )
+
+for match_index in range(MATCH_HISTORY_COUNT):
+    match_number = match_index + 1
+    match_key = f"match_{match_number}"
+
+    for team_key, team_name in [("blue_team", "Blue"), ("red_team", "Red")]:
+        for index in range(5):
+            number = index + 1
+            MATCH_PLAYER_SENSORS.append(
+                {
+                    "key": f"{match_key}_{team_key}_{number}",
+                    "name": f"Match {match_number} {team_name} Player {number}",
+                    "icon": "mdi:account",
+                    "match_key": match_key,
+                    "match_index": match_index,
+                    "team_key": team_key,
+                    "index": index,
+                }
+            )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -186,11 +230,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         update_interval=LIVE_SCAN_INTERVAL,
     )
 
-    last_match_coordinator = DataUpdateCoordinator(
+    match_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="league_stats_last_match",
-        update_method=lambda: fetch_last_match_data(
+        name="league_stats_match_history",
+        update_method=lambda: fetch_match_history_data(
             session,
             config[CONF_API_KEY],
             config[CONF_GAME_NAME],
@@ -203,13 +247,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     await ranked_coordinator.async_config_entry_first_refresh()
     await live_coordinator.async_config_entry_first_refresh()
-    await last_match_coordinator.async_config_entry_first_refresh()
+    await match_coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         [LeagueStatsSensor(ranked_coordinator, d) for d in RANKED_SENSORS]
         + [LeagueLiveSensor(live_coordinator, d) for d in LIVE_SENSORS]
-        + [LeagueLastMatchSensor(last_match_coordinator, d) for d in LAST_MATCH_SENSORS]
-        + [LeagueLastMatchPlayerSensor(last_match_coordinator, d) for d in LAST_MATCH_PLAYER_SENSORS]
+        + [LeagueMatchSensor(match_coordinator, d) for d in LAST_MATCH_SENSORS]
+        + [LeagueMatchPlayerSensor(match_coordinator, d) for d in LAST_MATCH_PLAYER_SENSORS]
+        + [LeagueMatchSensor(match_coordinator, d) for d in MATCH_SENSORS]
+        + [LeagueMatchPlayerSensor(match_coordinator, d) for d in MATCH_PLAYER_SENSORS]
     )
 
 
@@ -265,10 +311,7 @@ def make_opgg_url(platform, game_name, tag_line):
 
 
 def parse_queue(leagues, queue_type):
-    queue = next(
-        (entry for entry in leagues if entry.get("queueType") == queue_type),
-        None,
-    )
+    queue = next((entry for entry in leagues if entry.get("queueType") == queue_type), None)
 
     if not queue:
         return {
@@ -322,11 +365,7 @@ async def get_champion_data(session, champion_id):
         return CHAMPION_CACHE[champion_id]
 
     latest_version = await get_latest_ddragon_version(session)
-
-    champions_url = (
-        f"https://ddragon.leagueoflegends.com/cdn/"
-        f"{latest_version}/data/en_US/champion.json"
-    )
+    champions_url = f"https://ddragon.leagueoflegends.com/cdn/{latest_version}/data/en_US/champion.json"
 
     async with session.get(champions_url) as resp:
         resp.raise_for_status()
@@ -339,18 +378,9 @@ async def get_champion_data(session, champion_id):
         CHAMPION_CACHE[champ_key] = {
             "name": champion["name"],
             "ddragon_id": champ_id,
-            "icon": (
-                f"https://ddragon.leagueoflegends.com/cdn/"
-                f"{latest_version}/img/champion/{champ_id}.png"
-            ),
-            "splash": (
-                f"https://ddragon.leagueoflegends.com/cdn/img/champion/splash/"
-                f"{champ_id}_0.jpg"
-            ),
-            "loading": (
-                f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/"
-                f"{champ_id}_0.jpg"
-            ),
+            "icon": f"https://ddragon.leagueoflegends.com/cdn/{latest_version}/img/champion/{champ_id}.png",
+            "splash": f"https://ddragon.leagueoflegends.com/cdn/img/champion/splash/{champ_id}_0.jpg",
+            "loading": f"https://ddragon.leagueoflegends.com/cdn/img/champion/loading/{champ_id}_0.jpg",
         }
 
     return CHAMPION_CACHE.get(
@@ -369,10 +399,7 @@ def get_item_icon_url(version, item_id):
     if not item_id or item_id == 0:
         return None
 
-    return (
-        f"https://ddragon.leagueoflegends.com/cdn/"
-        f"{version}/img/item/{item_id}.png"
-    )
+    return f"https://ddragon.leagueoflegends.com/cdn/{version}/img/item/{item_id}.png"
 
 
 async def get_summoner_spell_data(session, spell_id):
@@ -383,11 +410,7 @@ async def get_summoner_spell_data(session, spell_id):
         return SUMMONER_SPELL_CACHE[spell_id]
 
     latest_version = await get_latest_ddragon_version(session)
-
-    spells_url = (
-        f"https://ddragon.leagueoflegends.com/cdn/"
-        f"{latest_version}/data/en_US/summoner.json"
-    )
+    spells_url = f"https://ddragon.leagueoflegends.com/cdn/{latest_version}/data/en_US/summoner.json"
 
     async with session.get(spells_url) as resp:
         resp.raise_for_status()
@@ -400,10 +423,7 @@ async def get_summoner_spell_data(session, spell_id):
         SUMMONER_SPELL_CACHE[key] = {
             "id": key,
             "name": spell["name"],
-            "icon": (
-                f"https://ddragon.leagueoflegends.com/cdn/"
-                f"{latest_version}/img/spell/{image}"
-            ),
+            "icon": f"https://ddragon.leagueoflegends.com/cdn/{latest_version}/img/spell/{image}",
         }
 
     return SUMMONER_SPELL_CACHE.get(spell_id)
@@ -417,11 +437,7 @@ async def get_rune_data(session, rune_id):
         return RUNE_CACHE[rune_id]
 
     latest_version = await get_latest_ddragon_version(session)
-
-    runes_url = (
-        f"https://ddragon.leagueoflegends.com/cdn/"
-        f"{latest_version}/data/en_US/runesReforged.json"
-    )
+    runes_url = f"https://ddragon.leagueoflegends.com/cdn/{latest_version}/data/en_US/runesReforged.json"
 
     async with session.get(runes_url) as resp:
         resp.raise_for_status()
@@ -445,11 +461,16 @@ async def get_rune_data(session, rune_id):
     return RUNE_CACHE.get(rune_id)
 
 
+async def fetch_account(session, api_key, game_name, tag_line, region):
+    url = f"https://{region}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
+
+    async with session.get(url, params={"api_key": api_key}) as resp:
+        resp.raise_for_status()
+        return await resp.json()
+
+
 async def fetch_top_champion(session, api_key, platform, puuid):
-    url = (
-        f"https://{platform}.api.riotgames.com"
-        f"/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top"
-    )
+    url = f"https://{platform}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{puuid}/top"
 
     async with session.get(url, params={"api_key": api_key, "count": 1}) as resp:
         resp.raise_for_status()
@@ -483,19 +504,6 @@ async def fetch_top_champion(session, api_key, platform, puuid):
     }
 
 
-async def fetch_account(session, api_key, game_name, tag_line, region):
-    url = (
-        f"https://{region}.api.riotgames.com"
-        f"/riot/account/v1/accounts/by-riot-id/{game_name}/{tag_line}"
-    )
-
-    async with session.get(url, params={"api_key": api_key}) as resp:
-        resp.raise_for_status()
-        account = await resp.json()
-
-    return account
-
-
 async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region):
     account = await fetch_account(session, api_key, game_name, tag_line, region)
 
@@ -503,10 +511,7 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
     account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
     account_slug = safe_slug(account_name)
 
-    league_url = (
-        f"https://{platform}.api.riotgames.com"
-        f"/lol/league/v4/entries/by-puuid/{puuid}"
-    )
+    league_url = f"https://{platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
 
     async with session.get(league_url, params={"api_key": api_key}) as resp:
         resp.raise_for_status()
@@ -531,116 +536,46 @@ async def fetch_lol_data(session, api_key, game_name, tag_line, platform, region
             "wins": total_wins,
             "losses": total_losses,
             "games": total_games,
-            "win_rate": (
-                round((total_wins / total_games) * 100, 1)
-                if total_games > 0
-                else 0
-            ),
+            "win_rate": round((total_wins / total_games) * 100, 1) if total_games > 0 else 0,
         },
     }
 
 
 async def fetch_player_rank(session, api_key, platform, puuid):
-    url = (
-        f"https://{platform}.api.riotgames.com"
-        f"/lol/league/v4/entries/by-puuid/{puuid}"
-    )
-
-    try:
-        async with session.get(url, params={"api_key": api_key}) as resp:
-            if resp.status != 200:
-                return "Unranked"
-
-            leagues = await resp.json()
-    except Exception:
-        return "Unknown"
-
-    solo = next(
-        (q for q in leagues if q.get("queueType") == "RANKED_SOLO_5x5"),
-        None,
-    )
-    flex = next(
-        (q for q in leagues if q.get("queueType") == "RANKED_FLEX_SR"),
-        None,
-    )
-
-    selected = solo or flex
-
-    if not selected:
-        return "Unranked"
-
-    queue = "SoloQ" if selected is solo else "Flex"
-
-    return (
-        f"{queue}: {selected.get('tier', '')} "
-        f"{selected.get('rank', '')} "
-        f"{selected.get('leaguePoints', 0)} LP"
-    ).strip()
+    stats = await fetch_player_rank_stats(session, api_key, platform, puuid)
+    return stats.get("rank", "Unknown")
 
 
 async def fetch_player_rank_stats(session, api_key, platform, puuid):
     if not puuid:
-        return {
-            "rank": "Unknown",
-            "winrate": 0,
-            "wins": 0,
-            "losses": 0,
-            "games": 0,
-            "queue": None,
-            "lp": 0,
-        }
+        return empty_rank_stats("Unknown")
 
-    url = (
-        f"https://{platform}.api.riotgames.com"
-        f"/lol/league/v4/entries/by-puuid/{puuid}"
-    )
+    if puuid in PLAYER_RANK_CACHE:
+        return PLAYER_RANK_CACHE[puuid]
+
+    url = f"https://{platform}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}"
 
     try:
         async with session.get(url, params={"api_key": api_key}) as resp:
             if resp.status != 200:
-                return {
-                    "rank": "Unranked",
-                    "winrate": 0,
-                    "wins": 0,
-                    "losses": 0,
-                    "games": 0,
-                    "queue": None,
-                    "lp": 0,
-                }
+                result = empty_rank_stats("Unranked")
+                PLAYER_RANK_CACHE[puuid] = result
+                return result
 
             leagues = await resp.json()
     except Exception:
-        return {
-            "rank": "Unknown",
-            "winrate": 0,
-            "wins": 0,
-            "losses": 0,
-            "games": 0,
-            "queue": None,
-            "lp": 0,
-        }
+        result = empty_rank_stats("Unknown")
+        PLAYER_RANK_CACHE[puuid] = result
+        return result
 
-    solo = next(
-        (q for q in leagues if q.get("queueType") == "RANKED_SOLO_5x5"),
-        None,
-    )
-    flex = next(
-        (q for q in leagues if q.get("queueType") == "RANKED_FLEX_SR"),
-        None,
-    )
-
+    solo = next((q for q in leagues if q.get("queueType") == "RANKED_SOLO_5x5"), None)
+    flex = next((q for q in leagues if q.get("queueType") == "RANKED_FLEX_SR"), None)
     selected = solo or flex
 
     if not selected:
-        return {
-            "rank": "Unranked",
-            "winrate": 0,
-            "wins": 0,
-            "losses": 0,
-            "games": 0,
-            "queue": None,
-            "lp": 0,
-        }
+        result = empty_rank_stats("Unranked")
+        PLAYER_RANK_CACHE[puuid] = result
+        return result
 
     wins = selected.get("wins", 0)
     losses = selected.get("losses", 0)
@@ -655,7 +590,7 @@ async def fetch_player_rank_stats(session, api_key, platform, puuid):
         f"{lp} LP"
     ).strip()
 
-    return {
+    result = {
         "rank": rank,
         "winrate": winrate,
         "wins": wins,
@@ -665,18 +600,25 @@ async def fetch_player_rank_stats(session, api_key, platform, puuid):
         "lp": lp,
     }
 
+    PLAYER_RANK_CACHE[puuid] = result
+    return result
+
+
+def empty_rank_stats(rank):
+    return {
+        "rank": rank,
+        "winrate": 0,
+        "wins": 0,
+        "losses": 0,
+        "games": 0,
+        "queue": None,
+        "lp": 0,
+    }
+
 
 def get_participant_name(participant, fallback_name=None, fallback_tag=None):
-    game_name = (
-        participant.get("riotIdGameName")
-        or participant.get("gameName")
-        or fallback_name
-    )
-    tag_line = (
-        participant.get("riotIdTagline")
-        or participant.get("tagLine")
-        or fallback_tag
-    )
+    game_name = participant.get("riotIdGameName") or participant.get("gameName") or fallback_name
+    tag_line = participant.get("riotIdTagline") or participant.get("tagLine") or fallback_tag
 
     if game_name and tag_line:
         return game_name, tag_line, f"{game_name}#{tag_line}"
@@ -689,28 +631,14 @@ def get_participant_name(participant, fallback_name=None, fallback_tag=None):
     return "Unknown", None, "Unknown"
 
 
-async def enrich_participant(
-    session,
-    api_key,
-    platform,
-    participant,
-    own_puuid,
-    own_game_name,
-    own_tag_line,
-):
+async def enrich_participant(session, api_key, platform, participant, own_puuid, own_game_name, own_tag_line):
     puuid = participant.get("puuid")
     champion_id = participant.get("championId")
     champion = await get_champion_data(session, champion_id)
 
     fallback_name = own_game_name if puuid == own_puuid else None
     fallback_tag = own_tag_line if puuid == own_puuid else None
-
-    game_name, tag_line, display_name = get_participant_name(
-        participant,
-        fallback_name,
-        fallback_tag,
-    )
-
+    game_name, tag_line, display_name = get_participant_name(participant, fallback_name, fallback_tag)
     rank = await fetch_player_rank(session, api_key, platform, puuid) if puuid else "Unknown"
 
     return {
@@ -736,10 +664,7 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
     account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
     account_slug = safe_slug(account_name)
 
-    live_url = (
-        f"https://{platform}.api.riotgames.com"
-        f"/lol/spectator/v5/active-games/by-summoner/{puuid}"
-    )
+    live_url = f"https://{platform}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{puuid}"
 
     async with session.get(live_url, params={"api_key": api_key}) as resp:
         if resp.status == 404:
@@ -752,19 +677,10 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
                     "queue_id": None,
                     "timer": None,
                     "game_length": 0,
-                    "current_champion": {
-                        "name": None,
-                        "icon": None,
-                        "splash": None,
-                        "loading": None,
-                    },
+                    "current_champion": {"name": None, "icon": None, "splash": None, "loading": None},
                     "blue_team": [],
                     "red_team": [],
-                    "opgg": make_opgg_url(
-                        platform,
-                        account.get("gameName"),
-                        account.get("tagLine"),
-                    ),
+                    "opgg": make_opgg_url(platform, account.get("gameName"), account.get("tagLine")),
                 },
             }
 
@@ -793,12 +709,7 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
         elif player["team_id"] == 200:
             red_team.append(player)
 
-    current_champion = {
-        "name": None,
-        "icon": None,
-        "splash": None,
-        "loading": None,
-    }
+    current_champion = {"name": None, "icon": None, "splash": None, "loading": None}
 
     if current:
         current_champion = await get_champion_data(session, current.get("championId"))
@@ -821,11 +732,7 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
             "current_champion": current_champion,
             "blue_team": blue_team,
             "red_team": red_team,
-            "opgg": make_opgg_url(
-                platform,
-                account.get("gameName"),
-                account.get("tagLine"),
-            ),
+            "opgg": make_opgg_url(platform, account.get("gameName"), account.get("tagLine")),
         },
     }
 
@@ -833,27 +740,19 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
 async def enrich_match_participant(session, api_key, platform, participant, game_duration):
     latest_version = await get_latest_ddragon_version(session)
 
+    puuid = participant.get("puuid")
     champion_id = participant.get("championId")
     champion = await get_champion_data(session, champion_id)
 
-    game_name = (
-        participant.get("riotIdGameName")
-        or participant.get("summonerName")
-        or "Unknown"
-    )
+    game_name = participant.get("riotIdGameName") or participant.get("summonerName") or "Unknown"
     tag_line = participant.get("riotIdTagline")
-
     name = f"{game_name}#{tag_line}" if tag_line else game_name
 
     kills = participant.get("kills", 0)
     deaths = participant.get("deaths", 0)
     assists = participant.get("assists", 0)
 
-    cs = (
-        participant.get("totalMinionsKilled", 0)
-        + participant.get("neutralMinionsKilled", 0)
-    )
-
+    cs = participant.get("totalMinionsKilled", 0) + participant.get("neutralMinionsKilled", 0)
     minutes = max((game_duration or 0) / 60, 1)
     cs_per_min = round(cs / minutes, 1)
 
@@ -874,22 +773,13 @@ async def enrich_match_participant(session, api_key, platform, participant, game
     ]
 
     items = [
-        {
-            "id": item_id,
-            "icon": get_item_icon_url(latest_version, item_id),
-        }
+        {"id": item_id, "icon": get_item_icon_url(latest_version, item_id)}
         for item_id in item_ids
         if item_id and item_id != 0
     ]
 
-    spell1 = await get_summoner_spell_data(
-        session,
-        participant.get("summoner1Id"),
-    )
-    spell2 = await get_summoner_spell_data(
-        session,
-        participant.get("summoner2Id"),
-    )
+    spell1 = await get_summoner_spell_data(session, participant.get("summoner1Id"))
+    spell2 = await get_summoner_spell_data(session, participant.get("summoner2Id"))
 
     perks = participant.get("perks", {}) or {}
     styles = perks.get("styles", []) or []
@@ -899,27 +789,16 @@ async def enrich_match_participant(session, api_key, platform, participant, game
 
     if len(styles) > 0:
         selections = styles[0].get("selections", []) or []
-
         if selections:
-            primary_rune = await get_rune_data(
-                session,
-                selections[0].get("perk"),
-            )
+            primary_rune = await get_rune_data(session, selections[0].get("perk"))
 
     if len(styles) > 1:
-        secondary_rune = await get_rune_data(
-            session,
-            styles[1].get("style"),
-        )
+        secondary_rune = await get_rune_data(session, styles[1].get("style"))
 
-    rank_stats = await fetch_player_rank_stats(
-        session,
-        api_key,
-        platform,
-        participant.get("puuid"),
-    )
+    rank_stats = await fetch_player_rank_stats(session, api_key, platform, puuid)
 
     return {
+        "puuid": puuid,
         "name": name,
         "rank": rank_stats.get("rank"),
         "winrate": rank_stats.get("winrate"),
@@ -931,10 +810,8 @@ async def enrich_match_participant(session, api_key, platform, participant, game
         "champion": participant.get("championName") or champion["name"],
         "champion_id": champion_id,
         "champion_level": participant.get("champLevel", 0),
-        "role": format_role(
-            participant.get("teamPosition")
-            or participant.get("individualPosition")
-        ),
+        "role": format_role(participant.get("teamPosition") or participant.get("individualPosition")),
+        "main_role": None,
         "kills": kills,
         "deaths": deaths,
         "assists": assists,
@@ -957,219 +834,164 @@ async def enrich_match_participant(session, api_key, platform, participant, game
     }
 
 
-async def fetch_last_match_data(session, api_key, game_name, tag_line, platform, region):
+def empty_match(result="No Match", match_id=None):
+    return {
+        "result": result,
+        "match_id": match_id,
+        "champion": None,
+        "champion_id": None,
+        "champion_level": None,
+        "role": None,
+        "kills": 0,
+        "deaths": 0,
+        "assists": 0,
+        "kda": 0,
+        "cs": 0,
+        "cs_per_min": 0,
+        "gold": 0,
+        "damage": 0,
+        "vision_score": 0,
+        "kill_participation": None,
+        "duration": None,
+        "queue": None,
+        "game_mode": None,
+        "game_type": None,
+        "icon": None,
+        "splash": None,
+        "loading": None,
+        "items": [],
+        "summoner_spells": [],
+        "primary_rune": None,
+        "secondary_rune": None,
+        "blue_team": [],
+        "red_team": [],
+        "blue_dragons": 0,
+        "red_dragons": 0,
+        "blue_barons": 0,
+        "red_barons": 0,
+        "blue_towers": 0,
+        "red_towers": 0,
+    }
+
+
+async def fetch_match_history_data(session, api_key, game_name, tag_line, platform, region):
+    PLAYER_RANK_CACHE.clear()
+
     account = await fetch_account(session, api_key, game_name, tag_line, region)
 
     puuid = account["puuid"]
     account_name = f"{account.get('gameName')}#{account.get('tagLine')}"
     account_slug = safe_slug(account_name)
 
-    match_ids_url = (
-        f"https://{region}.api.riotgames.com"
-        f"/lol/match/v5/matches/by-puuid/{puuid}/ids"
-    )
+    match_ids_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
 
     async with session.get(
         match_ids_url,
-        params={
-            "api_key": api_key,
-            "start": 0,
-            "count": 1,
-        },
+        params={"api_key": api_key, "start": 0, "count": MATCH_HISTORY_COUNT},
     ) as resp:
         resp.raise_for_status()
         match_ids = await resp.json()
 
-    if not match_ids:
-        return {
-            "account": account_name,
-            "account_slug": account_slug,
-            "last_match": {
-                "result": "No Match",
-                "match_id": None,
-                "champion": None,
-                "champion_id": None,
-                "champion_level": None,
-                "role": None,
-                "kills": 0,
-                "deaths": 0,
-                "assists": 0,
-                "kda": 0,
-                "cs": 0,
-                "cs_per_min": 0,
-                "gold": 0,
-                "damage": 0,
-                "vision_score": 0,
-                "kill_participation": None,
-                "duration": None,
-                "queue": None,
-                "game_mode": None,
-                "game_type": None,
-                "icon": None,
-                "splash": None,
-                "loading": None,
-                "items": [],
-                "summoner_spells": [],
-                "primary_rune": None,
-                "secondary_rune": None,
-                "blue_team": [],
-                "red_team": [],
-                "blue_dragons": 0,
-                "red_dragons": 0,
-                "blue_barons": 0,
-                "red_barons": 0,
-                "blue_towers": 0,
-                "red_towers": 0,
-            },
-        }
+    matches = []
 
-    match_id = match_ids[0]
+    for match_id in match_ids:
+        match_url = f"https://{region}.api.riotgames.com/lol/match/v5/matches/{match_id}"
 
-    match_url = (
-        f"https://{region}.api.riotgames.com"
-        f"/lol/match/v5/matches/{match_id}"
-    )
+        async with session.get(match_url, params={"api_key": api_key}) as resp:
+            resp.raise_for_status()
+            match = await resp.json()
 
-    async with session.get(match_url, params={"api_key": api_key}) as resp:
-        resp.raise_for_status()
-        match = await resp.json()
+        info = match.get("info", {})
+        participants = info.get("participants", [])
+        game_duration = info.get("gameDuration", 0)
+        queue_id = info.get("queueId")
 
-    info = match.get("info", {})
-    participants = info.get("participants", [])
-    game_duration = info.get("gameDuration", 0)
+        blue_team = []
+        red_team = []
+        own_enriched = None
 
-    own = next((p for p in participants if p.get("puuid") == puuid), None)
+        for participant in participants:
+            player = await enrich_match_participant(
+                session,
+                api_key,
+                platform,
+                participant,
+                game_duration,
+            )
 
-    blue_team = []
-    red_team = []
+            if player.get("puuid") == puuid:
+                own_enriched = player
 
-    for participant in participants:
-        player = await enrich_match_participant(
-            session,
-            api_key,
-            platform,
-            participant,
-            game_duration,
-        )
+            if player["team_id"] == 100:
+                blue_team.append(player)
+            elif player["team_id"] == 200:
+                red_team.append(player)
 
-        if player["team_id"] == 100:
-            blue_team.append(player)
-        elif player["team_id"] == 200:
-            red_team.append(player)
+        teams = info.get("teams", []) or []
+        blue_objectives = next((t.get("objectives", {}) for t in teams if t.get("teamId") == 100), {})
+        red_objectives = next((t.get("objectives", {}) for t in teams if t.get("teamId") == 200), {})
 
-    queue_id = info.get("queueId")
-    duration = format_duration(game_duration)
-
-    teams = info.get("teams", []) or []
-
-    blue_objectives = next(
-        (t.get("objectives", {}) for t in teams if t.get("teamId") == 100),
-        {},
-    )
-    red_objectives = next(
-        (t.get("objectives", {}) for t in teams if t.get("teamId") == 200),
-        {},
-    )
-
-    blue_dragons = blue_objectives.get("dragon", {}).get("kills", 0)
-    red_dragons = red_objectives.get("dragon", {}).get("kills", 0)
-    blue_barons = blue_objectives.get("baron", {}).get("kills", 0)
-    red_barons = red_objectives.get("baron", {}).get("kills", 0)
-    blue_towers = blue_objectives.get("tower", {}).get("kills", 0)
-    red_towers = red_objectives.get("tower", {}).get("kills", 0)
-
-    if not own:
-        return {
-            "account": account_name,
-            "account_slug": account_slug,
-            "last_match": {
-                "result": "Unknown",
-                "match_id": match_id,
-                "champion": None,
-                "champion_id": None,
-                "champion_level": None,
-                "role": None,
-                "kills": 0,
-                "deaths": 0,
-                "assists": 0,
-                "kda": 0,
-                "cs": 0,
-                "cs_per_min": 0,
-                "gold": 0,
-                "damage": 0,
-                "vision_score": 0,
-                "kill_participation": None,
-                "duration": duration,
+        match_data = empty_match("Unknown", match_id)
+        match_data.update(
+            {
+                "duration": format_duration(game_duration),
                 "queue": QUEUE_NAMES.get(queue_id, f"Custom Game ({queue_id})"),
                 "game_mode": info.get("gameMode"),
                 "game_type": info.get("gameType"),
-                "icon": None,
-                "splash": None,
-                "loading": None,
-                "items": [],
-                "summoner_spells": [],
-                "primary_rune": None,
-                "secondary_rune": None,
                 "blue_team": blue_team,
                 "red_team": red_team,
-                "blue_dragons": blue_dragons,
-                "red_dragons": red_dragons,
-                "blue_barons": blue_barons,
-                "red_barons": red_barons,
-                "blue_towers": blue_towers,
-                "red_towers": red_towers,
-            },
-        }
+                "blue_dragons": blue_objectives.get("dragon", {}).get("kills", 0),
+                "red_dragons": red_objectives.get("dragon", {}).get("kills", 0),
+                "blue_barons": blue_objectives.get("baron", {}).get("kills", 0),
+                "red_barons": red_objectives.get("baron", {}).get("kills", 0),
+                "blue_towers": blue_objectives.get("tower", {}).get("kills", 0),
+                "red_towers": red_objectives.get("tower", {}).get("kills", 0),
+            }
+        )
 
-    own_enriched = await enrich_match_participant(
-        session,
-        api_key,
-        platform,
-        own,
-        game_duration,
-    )
+        if own_enriched:
+            match_data.update(
+                {
+                    "result": "Victory" if own_enriched.get("win") else "Defeat",
+                    "champion": own_enriched.get("champion"),
+                    "champion_id": own_enriched.get("champion_id"),
+                    "champion_level": own_enriched.get("champion_level"),
+                    "role": own_enriched.get("role"),
+                    "kills": own_enriched.get("kills"),
+                    "deaths": own_enriched.get("deaths"),
+                    "assists": own_enriched.get("assists"),
+                    "kda": own_enriched.get("kda"),
+                    "cs": own_enriched.get("cs"),
+                    "cs_per_min": own_enriched.get("cs_per_min"),
+                    "gold": own_enriched.get("gold"),
+                    "damage": own_enriched.get("damage"),
+                    "vision_score": own_enriched.get("vision_score"),
+                    "kill_participation": own_enriched.get("kill_participation"),
+                    "icon": own_enriched.get("icon"),
+                    "splash": own_enriched.get("splash"),
+                    "loading": own_enriched.get("loading"),
+                    "items": own_enriched.get("items"),
+                    "summoner_spells": own_enriched.get("summoner_spells"),
+                    "primary_rune": own_enriched.get("primary_rune"),
+                    "secondary_rune": own_enriched.get("secondary_rune"),
+                }
+            )
 
-    return {
+        matches.append(match_data)
+
+    last_match = matches[0] if matches else empty_match()
+
+    data = {
         "account": account_name,
         "account_slug": account_slug,
-        "last_match": {
-            "result": "Victory" if own.get("win") else "Defeat",
-            "match_id": match_id,
-            "champion": own_enriched["champion"],
-            "champion_id": own_enriched["champion_id"],
-            "champion_level": own_enriched["champion_level"],
-            "role": own_enriched["role"],
-            "kills": own_enriched["kills"],
-            "deaths": own_enriched["deaths"],
-            "assists": own_enriched["assists"],
-            "kda": own_enriched["kda"],
-            "cs": own_enriched["cs"],
-            "cs_per_min": own_enriched["cs_per_min"],
-            "gold": own_enriched["gold"],
-            "damage": own_enriched["damage"],
-            "vision_score": own_enriched["vision_score"],
-            "kill_participation": own_enriched["kill_participation"],
-            "duration": duration,
-            "queue": QUEUE_NAMES.get(queue_id, f"Custom Game ({queue_id})"),
-            "game_mode": info.get("gameMode"),
-            "game_type": info.get("gameType"),
-            "icon": own_enriched["icon"],
-            "splash": own_enriched["splash"],
-            "loading": own_enriched["loading"],
-            "items": own_enriched["items"],
-            "summoner_spells": own_enriched["summoner_spells"],
-            "primary_rune": own_enriched["primary_rune"],
-            "secondary_rune": own_enriched["secondary_rune"],
-            "blue_team": blue_team,
-            "red_team": red_team,
-            "blue_dragons": blue_dragons,
-            "red_dragons": red_dragons,
-            "blue_barons": blue_barons,
-            "red_barons": red_barons,
-            "blue_towers": blue_towers,
-            "red_towers": red_towers,
-        },
+        "last_match": last_match,
+        "matches": matches,
     }
+
+    for index in range(MATCH_HISTORY_COUNT):
+        data[f"match_{index + 1}"] = matches[index] if index < len(matches) else empty_match()
+
+    return data
 
 
 class BaseLeagueEntity(CoordinatorEntity):
@@ -1188,18 +1010,12 @@ class BaseLeagueEntity(CoordinatorEntity):
 
     @property
     def available(self):
-        return (
-            self.coordinator.last_update_success
-            and self.coordinator.data is not None
-        )
+        return self.coordinator.last_update_success and self.coordinator.data is not None
 
     @property
     def device_info(self):
         account = self.coordinator.data.get("account", "League Account")
-        account_slug = self.coordinator.data.get(
-            "account_slug",
-            "league_account",
-        )
+        account_slug = self.coordinator.data.get("account_slug", "league_account")
 
         return {
             "identifiers": {("league_stats", account_slug)},
@@ -1266,7 +1082,7 @@ class LeagueLiveSensor(BaseLeagueEntity, SensorEntity):
         }
 
 
-class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
+class LeagueMatchSensor(BaseLeagueEntity, SensorEntity):
     def __init__(self, coordinator, description):
         super().__init__(coordinator)
         self.description = description
@@ -1283,50 +1099,16 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self):
-        if self.description["key"] != "last_match":
+        field = self.description["path"][-1]
+
+        if field != "result":
             return None
 
-        last_match = self.coordinator.data.get("last_match", {})
-
-        return {
-            "match_id": last_match.get("match_id"),
-            "queue": last_match.get("queue"),
-            "duration": last_match.get("duration"),
-            "game_mode": last_match.get("game_mode"),
-            "game_type": last_match.get("game_type"),
-            "champion": last_match.get("champion"),
-            "champion_id": last_match.get("champion_id"),
-            "champion_level": last_match.get("champion_level"),
-            "role": last_match.get("role"),
-            "kills": last_match.get("kills"),
-            "deaths": last_match.get("deaths"),
-            "assists": last_match.get("assists"),
-            "kda": last_match.get("kda"),
-            "cs": last_match.get("cs"),
-            "cs_per_min": last_match.get("cs_per_min"),
-            "gold": last_match.get("gold"),
-            "damage": last_match.get("damage"),
-            "vision_score": last_match.get("vision_score"),
-            "kill_participation": last_match.get("kill_participation"),
-            "champion_icon": last_match.get("icon"),
-            "splash": last_match.get("splash"),
-            "loading": last_match.get("loading"),
-            "items": last_match.get("items"),
-            "summoner_spells": last_match.get("summoner_spells"),
-            "primary_rune": last_match.get("primary_rune"),
-            "secondary_rune": last_match.get("secondary_rune"),
-            "blue_team": last_match.get("blue_team"),
-            "red_team": last_match.get("red_team"),
-            "blue_dragons": last_match.get("blue_dragons"),
-            "red_dragons": last_match.get("red_dragons"),
-            "blue_barons": last_match.get("blue_barons"),
-            "red_barons": last_match.get("red_barons"),
-            "blue_towers": last_match.get("blue_towers"),
-            "red_towers": last_match.get("red_towers"),
-        }
+        match = self.coordinator.data.get(self.description["match_key"], {})
+        return match
 
 
-class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
+class LeagueMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
     def __init__(self, coordinator, description):
         super().__init__(coordinator)
         self.description = description
@@ -1339,8 +1121,8 @@ class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
 
     def _player(self):
         data = self.coordinator.data or {}
-        last_match = data.get("last_match", {})
-        team = last_match.get(self.description["team_key"], [])
+        match = data.get(self.description["match_key"], {})
+        team = match.get(self.description["team_key"], [])
         index = self.description["index"]
 
         if index >= len(team):
@@ -1377,6 +1159,7 @@ class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
             "champion_id": player.get("champion_id"),
             "champion_level": player.get("champion_level"),
             "role": player.get("role"),
+            "main_role": player.get("main_role"),
             "kills": player.get("kills"),
             "deaths": player.get("deaths"),
             "assists": player.get("assists"),
