@@ -121,6 +121,12 @@ LAST_MATCH_SENSORS = [
     {"key": "last_match_vision", "name": "Last Match Vision Score", "icon": "mdi:eye", "path": ("last_match", "vision_score")},
     {"key": "last_match_duration", "name": "Last Match Duration", "icon": "mdi:timer", "path": ("last_match", "duration")},
     {"key": "last_match_queue", "name": "Last Match Queue", "icon": "mdi:format-list-bulleted", "path": ("last_match", "queue")},
+    {"key": "last_match_blue_dragons", "name": "Last Match Blue Dragons", "icon": "mdi:dragon", "path": ("last_match", "blue_dragons")},
+    {"key": "last_match_red_dragons", "name": "Last Match Red Dragons", "icon": "mdi:dragon", "path": ("last_match", "red_dragons")},
+    {"key": "last_match_blue_barons", "name": "Last Match Blue Barons", "icon": "mdi:shield-crown", "path": ("last_match", "blue_barons")},
+    {"key": "last_match_red_barons", "name": "Last Match Red Barons", "icon": "mdi:shield-crown", "path": ("last_match", "red_barons")},
+    {"key": "last_match_blue_towers", "name": "Last Match Blue Towers", "icon": "mdi:tower-fire", "path": ("last_match", "blue_towers")},
+    {"key": "last_match_red_towers", "name": "Last Match Red Towers", "icon": "mdi:tower-fire", "path": ("last_match", "red_towers")},
     {"key": "last_match_icon", "name": "Last Match Icon", "icon": "mdi:image", "path": ("last_match", "icon")},
     {"key": "last_match_splash", "name": "Last Match Splash", "icon": "mdi:image-area", "path": ("last_match", "splash")},
     {"key": "last_match_loading", "name": "Last Match Loading", "icon": "mdi:image-frame", "path": ("last_match", "loading")},
@@ -572,6 +578,94 @@ async def fetch_player_rank(session, api_key, platform, puuid):
     ).strip()
 
 
+async def fetch_player_rank_stats(session, api_key, platform, puuid):
+    if not puuid:
+        return {
+            "rank": "Unknown",
+            "winrate": 0,
+            "wins": 0,
+            "losses": 0,
+            "games": 0,
+            "queue": None,
+            "lp": 0,
+        }
+
+    url = (
+        f"https://{platform}.api.riotgames.com"
+        f"/lol/league/v4/entries/by-puuid/{puuid}"
+    )
+
+    try:
+        async with session.get(url, params={"api_key": api_key}) as resp:
+            if resp.status != 200:
+                return {
+                    "rank": "Unranked",
+                    "winrate": 0,
+                    "wins": 0,
+                    "losses": 0,
+                    "games": 0,
+                    "queue": None,
+                    "lp": 0,
+                }
+
+            leagues = await resp.json()
+    except Exception:
+        return {
+            "rank": "Unknown",
+            "winrate": 0,
+            "wins": 0,
+            "losses": 0,
+            "games": 0,
+            "queue": None,
+            "lp": 0,
+        }
+
+    solo = next(
+        (q for q in leagues if q.get("queueType") == "RANKED_SOLO_5x5"),
+        None,
+    )
+    flex = next(
+        (q for q in leagues if q.get("queueType") == "RANKED_FLEX_SR"),
+        None,
+    )
+
+    selected = solo or flex
+
+    if not selected:
+        return {
+            "rank": "Unranked",
+            "winrate": 0,
+            "wins": 0,
+            "losses": 0,
+            "games": 0,
+            "queue": None,
+            "lp": 0,
+        }
+
+    wins = selected.get("wins", 0)
+    losses = selected.get("losses", 0)
+    games = wins + losses
+    winrate = round((wins / games) * 100, 1) if games > 0 else 0
+    queue = "SoloQ" if selected is solo else "Flex"
+    lp = selected.get("leaguePoints", 0)
+
+    rank = (
+        f"{queue}: {selected.get('tier', '')} "
+        f"{selected.get('rank', '')} "
+        f"{lp} LP"
+    ).strip()
+
+    return {
+        "rank": rank,
+        "winrate": winrate,
+        "wins": wins,
+        "losses": losses,
+        "games": games,
+        "queue": queue,
+        "lp": lp,
+    }
+
+
 def get_participant_name(participant, fallback_name=None, fallback_tag=None):
     game_name = (
         participant.get("riotIdGameName")
@@ -736,7 +830,7 @@ async def fetch_live_data(session, api_key, game_name, tag_line, platform, regio
     }
 
 
-async def enrich_match_participant(session, participant, game_duration):
+async def enrich_match_participant(session, api_key, platform, participant, game_duration):
     latest_version = await get_latest_ddragon_version(session)
 
     champion_id = participant.get("championId")
@@ -818,8 +912,22 @@ async def enrich_match_participant(session, participant, game_duration):
             styles[1].get("style"),
         )
 
+    rank_stats = await fetch_player_rank_stats(
+        session,
+        api_key,
+        platform,
+        participant.get("puuid"),
+    )
+
     return {
         "name": name,
+        "rank": rank_stats.get("rank"),
+        "winrate": rank_stats.get("winrate"),
+        "rank_wins": rank_stats.get("wins"),
+        "rank_losses": rank_stats.get("losses"),
+        "rank_games": rank_stats.get("games"),
+        "rank_queue": rank_stats.get("queue"),
+        "rank_lp": rank_stats.get("lp"),
         "champion": participant.get("championName") or champion["name"],
         "champion_id": champion_id,
         "champion_level": participant.get("champLevel", 0),
@@ -906,6 +1014,12 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "secondary_rune": None,
                 "blue_team": [],
                 "red_team": [],
+                "blue_dragons": 0,
+                "red_dragons": 0,
+                "blue_barons": 0,
+                "red_barons": 0,
+                "blue_towers": 0,
+                "red_towers": 0,
             },
         }
 
@@ -932,6 +1046,8 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
     for participant in participants:
         player = await enrich_match_participant(
             session,
+            api_key,
+            platform,
             participant,
             game_duration,
         )
@@ -943,6 +1059,24 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
 
     queue_id = info.get("queueId")
     duration = format_duration(game_duration)
+
+    teams = info.get("teams", []) or []
+
+    blue_objectives = next(
+        (t.get("objectives", {}) for t in teams if t.get("teamId") == 100),
+        {},
+    )
+    red_objectives = next(
+        (t.get("objectives", {}) for t in teams if t.get("teamId") == 200),
+        {},
+    )
+
+    blue_dragons = blue_objectives.get("dragon", {}).get("kills", 0)
+    red_dragons = red_objectives.get("dragon", {}).get("kills", 0)
+    blue_barons = blue_objectives.get("baron", {}).get("kills", 0)
+    red_barons = red_objectives.get("baron", {}).get("kills", 0)
+    blue_towers = blue_objectives.get("tower", {}).get("kills", 0)
+    red_towers = red_objectives.get("tower", {}).get("kills", 0)
 
     if not own:
         return {
@@ -978,11 +1112,19 @@ async def fetch_last_match_data(session, api_key, game_name, tag_line, platform,
                 "secondary_rune": None,
                 "blue_team": blue_team,
                 "red_team": red_team,
+                "blue_dragons": blue_dragons,
+                "red_dragons": red_dragons,
+                "blue_barons": blue_barons,
+                "red_barons": red_barons,
+                "blue_towers": blue_towers,
+                "red_towers": red_towers,
             },
         }
 
     own_enriched = await enrich_match_participant(
         session,
+        api_key,
+        platform,
         own,
         game_duration,
     )
@@ -1169,6 +1311,12 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
             "secondary_rune": last_match.get("secondary_rune"),
             "blue_team": last_match.get("blue_team"),
             "red_team": last_match.get("red_team"),
+            "blue_dragons": last_match.get("blue_dragons"),
+            "red_dragons": last_match.get("red_dragons"),
+            "blue_barons": last_match.get("blue_barons"),
+            "red_barons": last_match.get("red_barons"),
+            "blue_towers": last_match.get("blue_towers"),
+            "red_towers": last_match.get("red_towers"),
         }
 
 
@@ -1212,6 +1360,13 @@ class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
 
         return {
             "name": player.get("name"),
+            "rank": player.get("rank"),
+            "winrate": player.get("winrate"),
+            "rank_wins": player.get("rank_wins"),
+            "rank_losses": player.get("rank_losses"),
+            "rank_games": player.get("rank_games"),
+            "rank_queue": player.get("rank_queue"),
+            "rank_lp": player.get("rank_lp"),
             "champion": player.get("champion"),
             "champion_id": player.get("champion_id"),
             "champion_level": player.get("champion_level"),
