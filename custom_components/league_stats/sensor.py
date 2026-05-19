@@ -1019,32 +1019,54 @@ def slim_match(match_data):
 
     return {
         "result": match_data.get("result"),
+
+        "win": match_data.get("result") == "Victory",
+
+        "team_id": match_data.get("team_id"),
+
+        "side": (
+            "Blue Side"
+            if match_data.get("team_id") == 100
+            else "Red Side"
+            if match_data.get("team_id") == 200
+            else "Unknown Side"
+        ),
+
         "match_id": match_data.get("match_id"),
+
         "champion": match_data.get("champion"),
         "champion_id": match_data.get("champion_id"),
         "champion_level": match_data.get("champion_level"),
+
         "role": match_data.get("role"),
+
         "kills": match_data.get("kills"),
         "deaths": match_data.get("deaths"),
         "assists": match_data.get("assists"),
         "kda": match_data.get("kda"),
+
         "cs": match_data.get("cs"),
         "cs_per_min": match_data.get("cs_per_min"),
+
         "gold": match_data.get("gold"),
         "damage": match_data.get("damage"),
         "vision_score": match_data.get("vision_score"),
         "kill_participation": match_data.get("kill_participation"),
+
         "duration": match_data.get("duration"),
         "queue": match_data.get("queue"),
         "game_mode": match_data.get("game_mode"),
         "game_type": match_data.get("game_type"),
+
         "champion_icon": match_data.get("icon"),
         "splash": match_data.get("splash"),
         "loading": match_data.get("loading"),
+
         "items": match_data.get("items"),
         "summoner_spells": match_data.get("summoner_spells"),
         "primary_rune": match_data.get("primary_rune"),
         "secondary_rune": match_data.get("secondary_rune"),
+
         "blue_dragons": match_data.get("blue_dragons"),
         "red_dragons": match_data.get("red_dragons"),
         "blue_barons": match_data.get("blue_barons"),
@@ -1141,6 +1163,7 @@ async def build_match_data(
                 "damage": own_enriched["damage"],
                 "vision_score": own_enriched["vision_score"],
                 "kill_participation": own_enriched["kill_participation"],
+		"team_id": own_enriched["team_id"],
                 "icon": own_enriched["icon"],
                 "splash": own_enriched["splash"],
                 "loading": own_enriched["loading"],
