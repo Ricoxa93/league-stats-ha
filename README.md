@@ -223,6 +223,203 @@ entities:
 
 ---
 
+League Stats Dashboard Cards for Home Assistant
+Diese Beispiele zeigen fertige Dashboard-Karten für die League Stats Home-Assistant-Integration.
+Die Karten sind für HACS-Nutzer gedacht, die nach der Installation der Integration direkt eine optisch fertige Ansicht für das letzte Match und die letzten Spiele nutzen möchten.
+Vorschau
+Last Match Team View
+![Last Match Team View](assets/last_match_team_view_anonymized.png)
+Last Games / Match History
+![Last Games History](assets/last_games_history_anonymized.png)
+Voraussetzungen
+Für die Beispielkarten werden diese Lovelace-Custom-Cards genutzt:
+`custom:button-card`
+`browser_mod` für Popups, optional aber empfohlen
+Wenn `browser_mod` nicht installiert ist, funktionieren die Karten selbst, aber die Detail-Popups beim Antippen nicht.
+Wichtige Platzhalter
+In den YAML-Beispielen sind keine echten Spielernamen enthalten. Vor der Nutzung müssen diese Platzhalter angepasst werden.
+Platzhalter	Bedeutung	Beispiel
+`ExamplePlayer#TAG`	Dein Riot-Name mit Tagline	`MyName#EUW`
+`sensor.league_stats_exampleplayer_tag`	Entity-Präfix deiner Integration	`sensor.league_stats_myname_euw`
+Den richtigen Entity-Namen findest du in Home Assistant unter:
+```text
+Entwicklerwerkzeuge → Zustände → Suche nach: league_stats
+```
+Typische Entities sehen so aus:
+```text
+sensor.league_stats_exampleplayer_tag_last_match
+sensor.league_stats_exampleplayer_tag_last_match_history_1
+sensor.league_stats_exampleplayer_tag_last_match_blue_player_1
+sensor.league_stats_exampleplayer_tag_last_match_red_player_1
+```
+Empfohlene Struktur
+Die Beispiele liegen in diesem Ordner:
+```text
+examples/
+  button_card_templates.yaml
+  last_games_stack.yaml
+  last_match_player_card.yaml
+  last_match_blue_team_header.yaml
+  last_match_red_team_header.yaml
+```
+Variante 1: Match History mit Template
+Diese Variante ist für die letzten 5 Spiele gedacht.
+1. Template einfügen
+Kopiere den Inhalt aus:
+```text
+examples/button_card_templates.yaml
+```
+in dein Dashboard unter `button_card_templates`.
+Bei YAML-Dashboards sieht das zum Beispiel so aus:
+```yaml
+button_card_templates:
+  league_match_history:
+    ...
+```
+2. Last-Games-Stack einfügen
+Kopiere danach den Inhalt aus:
+```text
+examples/last_games_stack.yaml
+```
+in dein Dashboard.
+Passe dort nur diese Werte an:
+```yaml
+entity: sensor.league_stats_exampleplayer_tag_last_match_history_1
+variables:
+  own_player: ExamplePlayer#TAG
+```
+Für die weiteren Karten entsprechend:
+```yaml
+sensor.league_stats_exampleplayer_tag_last_match_history_2
+sensor.league_stats_exampleplayer_tag_last_match_history_3
+sensor.league_stats_exampleplayer_tag_last_match_history_4
+sensor.league_stats_exampleplayer_tag_last_match_history_5
+```
+Variante 2: Team View für das letzte Match
+Die Team-Ansicht besteht aus:
+Blue-Team-Header
+5 Blue-Player-Cards
+Red-Team-Header
+5 Red-Player-Cards
+Blue-Team-Header
+Datei:
+```text
+examples/last_match_blue_team_header.yaml
+```
+Anpassen musst du dort die Entity-Präfixe:
+```yaml
+sensor.league_stats_exampleplayer_tag_last_match_blue_player_1
+sensor.league_stats_exampleplayer_tag_last_match_blue_dragons
+sensor.league_stats_exampleplayer_tag_last_match_blue_barons
+sensor.league_stats_exampleplayer_tag_last_match_blue_towers
+```
+Red-Team-Header
+Datei:
+```text
+examples/last_match_red_team_header.yaml
+```
+Anpassen musst du dort die Entity-Präfixe:
+```yaml
+sensor.league_stats_exampleplayer_tag_last_match_red_player_1
+sensor.league_stats_exampleplayer_tag_last_match_red_dragons
+sensor.league_stats_exampleplayer_tag_last_match_red_barons
+sensor.league_stats_exampleplayer_tag_last_match_red_towers
+```
+Player Card
+Datei:
+```text
+examples/last_match_player_card.yaml
+```
+Diese Karte kannst du für jeden Spieler kopieren. Du änderst nur die Entity:
+```yaml
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_1
+```
+Beispiele:
+```yaml
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_1
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_2
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_3
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_4
+entity: sensor.league_stats_exampleplayer_tag_last_match_blue_player_5
+
+entity: sensor.league_stats_exampleplayer_tag_last_match_red_player_1
+entity: sensor.league_stats_exampleplayer_tag_last_match_red_player_2
+entity: sensor.league_stats_exampleplayer_tag_last_match_red_player_3
+entity: sensor.league_stats_exampleplayer_tag_last_match_red_player_4
+entity: sensor.league_stats_exampleplayer_tag_last_match_red_player_5
+```
+Zusätzlich anpassen:
+```yaml
+variables:
+  own_player: ExamplePlayer#TAG
+```
+Damit wird der eigene Spieler gelb hervorgehoben.
+Benötigte Sensor-Attribute
+Die History-Karten erwarten bei `last_match_history_X` diese Attribute:
+```yaml
+result: Victory
+win: true
+team_id: 100
+side: Blue Side
+champion: Sona
+champion_icon: https://...
+kills: 2
+deaths: 2
+assists: 12
+kda: 7
+items:
+  - icon: https://...
+summoner_spells:
+  - icon: https://...
+primary_rune:
+  icon: https://...
+secondary_rune:
+  icon: https://...
+```
+Für `side` gilt:
+Wert	Bedeutung
+`Blue Side`	eigener Spieler war im blauen Team
+`Red Side`	eigener Spieler war im roten Team
+Für `team_id` gilt:
+Wert	Bedeutung
+`100`	Blue Team
+`200`	Red Team
+Fehlerbehebung
+Die Karte zeigt keine Bilder
+Prüfe, ob die Entity Attribute wie `champion_icon`, `items`, `summoner_spells`, `primary_rune` und `secondary_rune` enthält.
+Victory / Defeat wird nicht angezeigt
+Prüfe, ob `result` oder `win` als Attribut vorhanden ist.
+```yaml
+result: Victory
+win: true
+```
+Blue Side / Red Side wird nicht angezeigt
+Prüfe, ob `side` oder `team_id` vorhanden ist.
+```yaml
+side: Blue Side
+team_id: 100
+```
+Popups öffnen sich nicht
+Installiere und konfiguriere `browser_mod`. Ohne `browser_mod` muss der `tap_action`-Bereich entfernt oder angepasst werden.
+Hinweise für HACS
+Diese YAML-Dateien können im Repository zum Beispiel so abgelegt werden:
+```text
+docs/dashboard-cards.md
+docs/assets/
+examples/dashboard/
+```
+Empfohlene README-Verlinkung:
+```markdown
+## Dashboard Examples
+
+Ready-to-use Lovelace examples are available here:
+
+- [Dashboard Card Documentation](docs/dashboard-cards.md)
+- [Example YAML files](examples/dashboard/)
+```
+Datenschutz
+Die Beispielbilder in dieser Dokumentation sind anonymisiert. Spielernamen wurden unkenntlich gemacht.
+
 # Lizenz
 
 MIT License
