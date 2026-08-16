@@ -1,6 +1,12 @@
 from .const import DOMAIN
+from .frontend_registration import async_register_frontend
 
 PLATFORMS = ["sensor", "image"]
+
+
+async def async_setup(hass, config):
+    await async_register_frontend(hass)
+    return True
 
 
 async def async_setup_entry(hass, entry):
