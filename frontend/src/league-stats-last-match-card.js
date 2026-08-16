@@ -109,9 +109,10 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
     const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<button type="button" class="player" data-player-row data-own-player="${player.own}" data-side="${side.toLowerCase()}" data-player-index="${index}">
       <span class="portrait-wrap">${icon(player.championIcon, "portrait")}<span class="level">${esc(player.championLevel ?? "?")}</span></span>
-      <span class="player-main"><span class="player-name">${esc(player.name)}</span><span class="champion-role">${esc(player.champion)} · ${esc(player.role)}</span></span>
-      <span class="kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span>
-      <span class="loadout"><span class="inventory items-group">${slots(player)}</span><span class="abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span></span></button>`;
+      <span class="player-identity player-main"><span class="player-name">${esc(player.name)}</span><span class="champion-role">${esc(player.champion)} · ${esc(player.role)}</span></span>
+      <span class="player-inventory inventory items-group">${slots(player)}</span>
+      <span class="player-abilities abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span>
+      <span class="player-combat kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span></button>`;
   }
 
   _openPlayer(side, index) {

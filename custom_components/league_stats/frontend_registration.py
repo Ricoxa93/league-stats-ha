@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 FRONTEND_URL = "/league_stats_frontend/league-stats-last-match-card.js"
 FRONTEND_PATH = Path(__file__).parent / "frontend" / "league-stats-last-match-card.js"
 _REGISTERED = "frontend_registered"
-VERSION = "0.4.5"
+VERSION = "0.4.6"
 
 
 def _resources(hass):
