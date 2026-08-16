@@ -57,6 +57,22 @@ it("liefert Home-Assistant-Größeninformationen", () => {
   expect(card.getGridOptions()).toEqual({ columns: "full", min_columns: 6 });
 });
 
+it("strukturiert beide Teamseiten für eine gespiegelte Desktop-Anordnung", async () => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card" });
+  card.hass = { states: states() };
+  document.body.append(card);
+  await card.updateComplete;
+  const blue = card.shadowRoot.querySelector('.player[data-side="blue"]');
+  const red = card.shadowRoot.querySelector('.player[data-side="red"]');
+  for (const row of [blue, red]) {
+    expect(row.querySelector(".inventory")).not.toBeNull();
+    expect(row.querySelector(".player-main")).not.toBeNull();
+    expect(row.querySelector(".kda-block")).not.toBeNull();
+    expect(row.querySelector(".portrait-wrap")).not.toBeNull();
+  }
+});
+
 it("zeigt vor dem ersten hass-Update einen Ladezustand", () => {
   const card = document.createElement("league-stats-last-match-card");
   card.setConfig({ type: "custom:league-stats-last-match-card" });

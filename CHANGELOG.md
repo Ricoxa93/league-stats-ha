@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 – 2026-08-16
+
+- Desktop-Karte nutzt die volle Sections-Breite und zeigt beide Teams nebeneinander.
+- Spielerzeilen orientieren sich wieder an der kompakten, gespiegelten Teamansicht.
+- Verbesserte Schriftgrößen, Abstände, Symbolgruppen und Lesbarkeit im Detaildialog.
+- Die einspaltige mobile Darstellung bleibt erhalten.
+
 ## 0.4.0 – 2026-08-16
 
 - Neue Lovelace-Karte `custom:league-stats-last-match-card` für beide Teams des letzten Matches.

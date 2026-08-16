@@ -90,8 +90,9 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
       .map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<button type="button" class="player" data-player-row data-own-player="${player.own}" data-side="${side.toLowerCase()}" data-player-index="${index}">
       <span class="portrait-wrap">${icon(player.championIcon, "portrait")}<span class="level">${esc(player.championLevel ?? "?")}</span></span>
-      <span class="player-main"><span class="player-name">${esc(player.name)}</span><br><span class="champion-role">${esc(player.champion)} · ${esc(player.role)}</span></span>
-      <span class="player-side"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="inventory">${slots(player)}</span><span class="extras">${extras}</span></span></button>`;
+      <span class="player-main"><span class="player-name">${esc(player.name)}</span><span class="champion-role">${esc(player.champion)} · ${esc(player.role)}</span></span>
+      <span class="kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span>
+      <span class="loadout"><span class="inventory">${slots(player)}</span><span class="extras">${extras}</span></span></button>`;
   }
 
   _openPlayer(side, index) {
