@@ -134,12 +134,22 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
   }
 
   _dialog(player) {
-    const items = [...player.items, ...player.summonerSpells, player.primaryRune, player.secondaryRune].filter(Boolean).map((item) => icon(item.icon)).join("");
+    const spells = [player.summonerSpells[0], player.summonerSpells[1]].map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<div class="backdrop"><section class="dialog" role="dialog" aria-modal="true" aria-label="Details zu ${esc(player.name)}"><button class="close" type="button" aria-label="Schließen">×</button>
-      ${player.splash ? `<img class="dialog-splash" src="${esc(player.splash)}" alt="">` : ""}<div class="dialog-body">${player.championIcon ? `<img class="dialog-champion-icon" src="${esc(player.championIcon)}" alt="${esc(player.champion)}">` : ""}<h2>${esc(player.champion)} · ${esc(player.role)}</h2><div>${esc(player.name)}</div><div><b>${esc(player.result)}</b> · ${esc(player.side)} · ${esc(player.queue)} · ${esc(player.duration)}</div>
-      <div class="dialog-kda">${player.kills}/${player.deaths}/${player.assists}</div><div>${player.kda} KDA</div>
-      <div class="details"><span><b>Level:</b> ${esc(player.championLevel)}</span><span><b>CS:</b> ${player.cs} (${player.csPerMin}/min)</span><span><b>Gold:</b> ${player.gold.toLocaleString("de-DE")}</span><span><b>Schaden:</b> ${player.damage.toLocaleString("de-DE")}</span><span><b>Vision:</b> ${player.visionScore}</span><span><b>KP:</b> ${esc(player.killParticipation ?? "–")}%</span></div>
-      <div class="dialog-items">${items || "Keine Itemdaten"}</div></div></section></div>`;
+      ${player.splash ? `<img class="dialog-splash" src="${esc(player.splash)}" alt="">` : ""}<div class="dialog-body">
+      <div class="dialog-hero">${player.championIcon ? `<img class="dialog-champion-icon" src="${esc(player.championIcon)}" alt="${esc(player.champion)}">` : ""}<h2>${esc(player.champion)} · ${esc(player.role)}</h2><div class="dialog-player-name">${esc(player.name)}</div><div class="dialog-context"><b>${esc(player.result)}</b> · ${esc(player.side)} · ${esc(player.queue)} · ${esc(player.duration)}</div></div>
+      <div class="dialog-combat"><div class="dialog-kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</div><div class="dialog-kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</div></div>
+      <div class="dialog-stats">
+        <div class="dialog-stat"><span class="stat-label">Level</span><strong class="stat-value">${esc(player.championLevel)}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">CS</span><strong class="stat-value">${player.cs} <small>(${player.csPerMin}/min)</small></strong></div>
+        <div class="dialog-stat"><span class="stat-label">Gold</span><strong class="stat-value">${player.gold.toLocaleString("de-DE")}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Schaden</span><strong class="stat-value">${player.damage.toLocaleString("de-DE")}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Vision</span><strong class="stat-value">${player.visionScore}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Kill-Beteiligung</span><strong class="stat-value">${esc(player.killParticipation ?? "–")}%</strong></div>
+      </div>
+      <div class="dialog-loadout"><div class="dialog-inventory">${slots(player)}</div><div class="dialog-abilities"><div class="spells-row">${spells}</div><div class="runes-row">${runes}</div></div></div>
+      </div></section></div>`;
   }
 }
 

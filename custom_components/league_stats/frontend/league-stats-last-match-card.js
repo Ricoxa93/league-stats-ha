@@ -143,14 +143,14 @@ var CARD_STYLES = `
   .portrait,.image-placeholder { width:43px; height:43px; border-radius:9px; object-fit:cover; background:#172033; display:grid; place-items:center; }
   .level { position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); min-width:18px; padding:1px 4px; border-radius:5px; background:#2563a8; font-size:9px; font-weight:900; text-align:center; }
   .player-main { min-width:0; display:flex; flex-direction:column; line-height:1.12; }
-  .player-name { font-size:12px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .champion-role { margin-top:3px; font-size:11px; font-weight:600; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .player-name { font-size:14px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .champion-role { margin-top:3px; font-size:12px; font-weight:650; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .kda-block { display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.05; }
-  .kda { font-size:14px; font-weight:900; white-space:nowrap; } .kda.good { color:#22c55e; } .kda.mid { color:#facc15; } .kda.low { color:#fb7185; }
-  .kda-ratio { margin-top:4px; font-size:11px; opacity:.82; white-space:nowrap; }
-  .loadout { display:flex; align-items:center; gap:6px; justify-content:start; }
+  .kda { font-size:18px; font-weight:900; white-space:nowrap; } .kda.good { color:#22c55e; } .kda.mid { color:#facc15; } .kda.low { color:#fb7185; }
+  .kda-ratio { margin-top:4px; font-size:12px; opacity:.86; white-space:nowrap; }
+  .loadout { display:flex; align-items:flex-end; gap:6px; justify-content:start; }
   .inventory { display:grid; grid-template-columns:repeat(7,17px); gap:2px; }
-  .abilities-group { display:grid; grid-template-rows:auto auto; gap:2px; padding-left:5px; border-left:1px solid rgba(255,255,255,.22); }
+  .abilities-group { display:grid; grid-template-rows:repeat(2,15px); gap:2px; padding-left:5px; border-left:1px solid rgba(255,255,255,.22); }
   .spells-row,.runes-row { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
   .spell-rune { width:15px; height:15px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .slot { width:17px; height:17px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
@@ -163,14 +163,14 @@ var CARD_STYLES = `
   .single-team .portrait,.single-team .portrait-wrap>.image-placeholder { width:56px; height:56px; border-radius:11px; }
   .single-team .level { font-size:10px; min-width:20px; }
   .single-team .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; }
-  .single-team .player-name { font-size:14px; }
-  .single-team .champion-role { font-size:12px; }
+  .single-team .player-name { font-size:16px; }
+  .single-team .champion-role { font-size:13px; }
   .single-team .kda-block { order:3!important; grid-column:3; grid-row:1; }
-  .single-team .kda { font-size:16px; }
-  .single-team .kda-ratio { font-size:12px; }
-  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:12px; min-width:0; }
+  .single-team .kda { font-size:20px; }
+  .single-team .kda-ratio { font-size:13px; }
+  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:flex-end; gap:12px; min-width:0; }
   .single-team .inventory { grid-template-columns:repeat(7,26px); gap:3px; }
-  .single-team .abilities-group { gap:3px; padding-left:10px; }
+  .single-team .abilities-group { grid-template-rows:repeat(2,24px); gap:3px; padding-left:10px; }
   .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,24px); gap:3px; }
   .single-team .slot { width:26px; height:26px; border-radius:5px; }
   .single-team .spell-rune { width:24px; height:24px; border-radius:5px; }
@@ -179,15 +179,28 @@ var CARD_STYLES = `
   .dialog { width:min(620px,100%); max-height:88vh; overflow:auto; border-radius:22px; background:linear-gradient(180deg,#281214,#0f172a); box-shadow:0 20px 70px rgba(0,0,0,.65); position:relative; }
   .dialog-splash { width:100%; height:210px; object-fit:cover; display:block; }
   .dialog-body { padding:18px 28px 28px; text-align:center; font-size:14px; line-height:1.4; }
-  .dialog-body h2 { margin:8px 0 4px; font-size:22px; }
+  .dialog-hero h2 { margin:8px 0 3px; font-size:24px; }
+  .dialog-player-name { font-size:16px; font-weight:800; }
+  .dialog-context { margin-top:4px; opacity:.86; }
   .dialog-champion-icon { width:84px; height:84px; object-fit:cover; border-radius:18px; margin:-2px auto 10px; display:block; }
   .close { position:absolute; right:12px; top:12px; z-index:2; width:38px; height:38px; border:0; border-radius:50%; background:rgba(0,0,0,.66); color:white; font-size:24px; cursor:pointer; }
-  .dialog-kda { font-size:42px; font-weight:900; margin:12px 0 2px; }
-  .details { display:grid; grid-template-columns:1fr 1fr; gap:7px 24px; max-width:380px; margin:16px auto; text-align:left; font-size:14px; }
-  .dialog-items { display:flex; justify-content:center; flex-wrap:wrap; gap:5px; }
-  .dialog-items img { width:40px; height:40px; border-radius:8px; background:#111827; }
+  .dialog-combat { margin:16px auto 14px; }
+  .dialog-kda { font-size:44px; line-height:1; font-weight:900; }
+  .dialog-kda.good { color:#22c55e; } .dialog-kda.mid { color:#facc15; } .dialog-kda.low { color:#fb7185; }
+  .dialog-kda-ratio { margin-top:5px; font-size:16px; font-weight:800; }
+  .dialog-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; max-width:500px; margin:0 auto 18px; text-align:left; }
+  .dialog-stat { min-width:0; padding:9px 12px; border:1px solid rgba(255,255,255,.10); border-radius:11px; background:rgba(255,255,255,.055); display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+  .stat-label { font-size:12px; font-weight:700; opacity:.72; }
+  .stat-value { min-width:0; font-size:16px; text-align:right; overflow-wrap:anywhere; }
+  .stat-value small { font-size:11px; opacity:.75; white-space:nowrap; }
+  .dialog-loadout { display:flex; align-items:flex-end; justify-content:center; gap:14px; padding-top:16px; border-top:1px solid rgba(255,255,255,.12); }
+  .dialog-inventory { display:grid; grid-template-columns:repeat(7,40px); gap:5px; }
+  .dialog-inventory .slot { width:40px; height:40px; border-radius:8px; }
+  .dialog-abilities { display:grid; grid-template-rows:repeat(2,40px); gap:5px; padding-left:14px; border-left:1px solid rgba(255,255,255,.22); }
+  .dialog-abilities .spells-row,.dialog-abilities .runes-row { grid-template-columns:repeat(2,40px); gap:5px; }
+  .dialog-abilities .spell-rune { width:40px; height:40px; border-radius:8px; }
   @container (max-width:840px) { .teams { width:100%; grid-template-columns:1fr; gap:14px; } }
-  @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 58px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; min-width:0; } .details { grid-template-columns:1fr; } ha-card { padding:8px; } }
+  @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 68px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:flex-end; gap:4px 7px; min-width:0; } .dialog-body { padding:16px; } .dialog-stats { grid-template-columns:1fr; } .dialog-loadout { flex-wrap:wrap; } .dialog-inventory { grid-template-columns:repeat(7,34px); gap:3px; } .dialog-inventory .slot { width:34px; height:34px; } .dialog-abilities { grid-template-rows:repeat(2,34px); padding-left:0; border-left:0; } .dialog-abilities .spells-row,.dialog-abilities .runes-row { grid-template-columns:repeat(2,34px); } .dialog-abilities .spell-rune { width:34px; height:34px; } ha-card { padding:8px; } }
   @container (max-width:390px) { .single-team .loadout { grid-column:1 / -1; grid-row:3; flex-wrap:wrap; padding-top:4px; } .single-team .inventory { grid-template-columns:repeat(7,17px); gap:2px; } .single-team .slot { width:17px; height:17px; } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,22px); } .single-team .spell-rune { width:22px; height:22px; } }
   @media (max-width:800px) { .teams { grid-template-columns:1fr; gap:14px; } }
 `;
@@ -391,12 +404,22 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
     this.updateComplete.then(() => previous?.focus?.());
   }
   _dialog(player) {
-    const items = [...player.items, ...player.summonerSpells, player.primaryRune, player.secondaryRune].filter(Boolean).map((item) => icon(item.icon)).join("");
+    const spells = [player.summonerSpells[0], player.summonerSpells[1]].map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<div class="backdrop"><section class="dialog" role="dialog" aria-modal="true" aria-label="Details zu ${esc2(player.name)}"><button class="close" type="button" aria-label="Schlie\xDFen">\xD7</button>
-      ${player.splash ? `<img class="dialog-splash" src="${esc2(player.splash)}" alt="">` : ""}<div class="dialog-body">${player.championIcon ? `<img class="dialog-champion-icon" src="${esc2(player.championIcon)}" alt="${esc2(player.champion)}">` : ""}<h2>${esc2(player.champion)} \xB7 ${esc2(player.role)}</h2><div>${esc2(player.name)}</div><div><b>${esc2(player.result)}</b> \xB7 ${esc2(player.side)} \xB7 ${esc2(player.queue)} \xB7 ${esc2(player.duration)}</div>
-      <div class="dialog-kda">${player.kills}/${player.deaths}/${player.assists}</div><div>${player.kda} KDA</div>
-      <div class="details"><span><b>Level:</b> ${esc2(player.championLevel)}</span><span><b>CS:</b> ${player.cs} (${player.csPerMin}/min)</span><span><b>Gold:</b> ${player.gold.toLocaleString("de-DE")}</span><span><b>Schaden:</b> ${player.damage.toLocaleString("de-DE")}</span><span><b>Vision:</b> ${player.visionScore}</span><span><b>KP:</b> ${esc2(player.killParticipation ?? "\u2013")}%</span></div>
-      <div class="dialog-items">${items || "Keine Itemdaten"}</div></div></section></div>`;
+      ${player.splash ? `<img class="dialog-splash" src="${esc2(player.splash)}" alt="">` : ""}<div class="dialog-body">
+      <div class="dialog-hero">${player.championIcon ? `<img class="dialog-champion-icon" src="${esc2(player.championIcon)}" alt="${esc2(player.champion)}">` : ""}<h2>${esc2(player.champion)} \xB7 ${esc2(player.role)}</h2><div class="dialog-player-name">${esc2(player.name)}</div><div class="dialog-context"><b>${esc2(player.result)}</b> \xB7 ${esc2(player.side)} \xB7 ${esc2(player.queue)} \xB7 ${esc2(player.duration)}</div></div>
+      <div class="dialog-combat"><div class="dialog-kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</div><div class="dialog-kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</div></div>
+      <div class="dialog-stats">
+        <div class="dialog-stat"><span class="stat-label">Level</span><strong class="stat-value">${esc2(player.championLevel)}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">CS</span><strong class="stat-value">${player.cs} <small>(${player.csPerMin}/min)</small></strong></div>
+        <div class="dialog-stat"><span class="stat-label">Gold</span><strong class="stat-value">${player.gold.toLocaleString("de-DE")}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Schaden</span><strong class="stat-value">${player.damage.toLocaleString("de-DE")}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Vision</span><strong class="stat-value">${player.visionScore}</strong></div>
+        <div class="dialog-stat"><span class="stat-label">Kill-Beteiligung</span><strong class="stat-value">${esc2(player.killParticipation ?? "\u2013")}%</strong></div>
+      </div>
+      <div class="dialog-loadout"><div class="dialog-inventory">${slots(player)}</div><div class="dialog-abilities"><div class="spells-row">${spells}</div><div class="runes-row">${runes}</div></div></div>
+      </div></section></div>`;
   }
 };
 if (!customElements.get("league-stats-last-match-card")) customElements.define("league-stats-last-match-card", LeagueStatsLastMatchCard);
