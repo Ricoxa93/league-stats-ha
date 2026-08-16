@@ -1,0 +1,15 @@
+{
+  "name": "league-stats-ha",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "build": "esbuild frontend/src/league-stats-last-match-card.js --bundle --format=esm --target=es2022 --outfile=custom_components/league_stats/frontend/league-stats-last-match-card.js",
+    "check": "npm test && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9",
+    "happy-dom": "18.0.1",
+    "vitest": "3.2.4"
+  }
+}

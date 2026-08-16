@@ -1186,6 +1186,7 @@ async def build_match_data(
                 participant,
                 game_duration,
             )
+            player["is_self"] = participant.get("puuid") == puuid
 
             if player["team_id"] == 100:
                 blue_team.append(player)
@@ -1373,6 +1374,7 @@ class LeagueLastMatchSensor(BaseLeagueEntity, SensorEntity):
         last_match = self.coordinator.data.get("last_match", {})
 
         return {
+            "account": self.coordinator.data.get("account"),
             "match_id": last_match.get("match_id"),
             "queue": last_match.get("queue"),
             "duration": last_match.get("duration"),
@@ -1490,6 +1492,7 @@ class LeagueLastMatchPlayerSensor(BaseLeagueEntity, SensorEntity):
 
         return {
             "name": player.get("name"),
+            "is_self": player.get("is_self", False),
             "rank": player.get("rank"),
             "winrate": player.get("winrate"),
             "rank_wins": player.get("rank_wins"),

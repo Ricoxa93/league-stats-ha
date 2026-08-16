@@ -261,3 +261,36 @@ Datenschutz Die Beispielbilder in dieser Dokumentation sind anonymisiert. Spiele
 
 Lizenz
 MIT License
+
+## Lovelace-Karte: Letztes Match
+
+Ab Version 0.4.0 liefert die Integration eine eigene Dashboard-Karte mit. Sie zeigt Blue Team und Red Team des letzten Matches, alle zehn Spieler, Teamwerte, Items, Zauber und Runen. Ein Klick auf einen Spieler öffnet die Detailansicht. `custom:button-card` und `browser_mod` werden nicht benötigt.
+
+Nach dem HACS-Update Home Assistant neu starten und den Browser einmal vollständig neu laden. Anschließend im Dashboard-Editor **League Stats – Letztes Match** auswählen. Bei genau einem eingerichteten Konto erkennt die Karte den Spieler automatisch.
+
+Minimale YAML-Konfiguration:
+
+```yaml
+type: custom:league-stats-last-match-card
+```
+
+Bei mehreren League-Konten kann das Konto im visuellen Editor ausgewählt oder per YAML festgelegt werden:
+
+```yaml
+type: custom:league-stats-last-match-card
+account: ricoxa_1993
+```
+
+Die Karte übernimmt bewusst nicht das Hintergrundbild der Dashboard-Ansicht. Dieses kann weiterhin in der Ansicht konfiguriert werden.
+
+### Ressourcen-Fallback für YAML-Modus
+
+Im normalen Storage-Modus registriert die Integration die Ressource automatisch. Falls die Lovelace-Ressourcen vollständig per YAML verwaltet werden, muss einmalig folgende Modulressource ergänzt werden:
+
+```yaml
+resources:
+  - url: /league_stats_frontend/league-stats-last-match-card.js
+    type: module
+```
+
+Nach einem Versionsupdate können zwischengespeicherte Frontend-Dateien durch einen Hard-Reload des Browsers (`Strg+F5`) aktualisiert werden.
