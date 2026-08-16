@@ -130,7 +130,9 @@ var CARD_STYLES = `
   .team-name small { font-size:12px; letter-spacing:0; }
   .blue .team-name { color:#60a5fa; } .red .team-name { color:#f87171; }
   .result { font-weight:900; font-size:13px; } .victory { color:#22c55e; } .defeat { color:#ef4444; }
-  .objectives { display:flex; gap:11px; margin-top:6px; font-size:11px; font-weight:700; opacity:.92; flex-wrap:wrap; }
+  .objectives { display:flex; align-items:center; gap:11px; margin-top:6px; font-size:11px; font-weight:700; opacity:.92; flex-wrap:wrap; }
+  .objective { display:inline-flex; align-items:center; gap:3px; }
+  .objective ha-icon { width:15px; height:15px; color:currentColor; }
   .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:140px minmax(105px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
   .blue .player { background:linear-gradient(90deg,rgba(30,64,175,.82),rgba(30,58,98,.84)); }
   .red .player { background:linear-gradient(90deg,rgba(153,27,27,.78),rgba(76,29,31,.86)); }
@@ -152,6 +154,22 @@ var CARD_STYLES = `
   .blue .loadout { order:1; } .blue .player-main { order:2; text-align:right; } .blue .kda-block { order:3; } .blue .portrait-wrap { order:4; }
   .red .player { grid-template-columns:43px 58px minmax(105px,1fr) 140px; }
   .red .portrait-wrap { order:1; } .red .kda-block { order:2; } .red .player-main { order:3; } .red .loadout { order:4; }
+  .teams.single-team { width:100%; max-width:620px; grid-template-columns:minmax(0,1fr); }
+  .single-team .player,.single-team .red .player { min-height:72px; padding:7px 10px; grid-template-columns:56px minmax(0,1fr) 72px; grid-template-rows:auto auto; gap:4px 9px; }
+  .single-team .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; width:56px; height:56px; }
+  .single-team .portrait,.single-team .portrait-wrap>.image-placeholder { width:56px; height:56px; border-radius:11px; }
+  .single-team .level { font-size:10px; min-width:20px; }
+  .single-team .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; }
+  .single-team .player-name { font-size:14px; }
+  .single-team .champion-role { font-size:12px; }
+  .single-team .kda-block { order:3!important; grid-column:3; grid-row:1; }
+  .single-team .kda { font-size:16px; }
+  .single-team .kda-ratio { font-size:12px; }
+  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:8px; min-width:0; }
+  .single-team .inventory { grid-template-columns:repeat(7,26px); gap:3px; }
+  .single-team .extras { grid-template-columns:repeat(4,24px); gap:3px; }
+  .single-team .slot { width:26px; height:26px; border-radius:5px; }
+  .single-team .spell-rune { width:24px; height:24px; border-radius:5px; }
   .status { padding:28px; text-align:center; border-radius:16px; background:var(--ha-card-background,var(--card-background-color,#1c1c1c)); }
   .backdrop { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(0,0,0,.72); }
   .dialog { width:min(620px,100%); max-height:88vh; overflow:auto; border-radius:22px; background:linear-gradient(180deg,#281214,#0f172a); box-shadow:0 20px 70px rgba(0,0,0,.65); position:relative; }
@@ -166,6 +184,7 @@ var CARD_STYLES = `
   .dialog-items img { width:40px; height:40px; border-radius:8px; background:#111827; }
   @container (max-width:840px) { .teams { width:100%; grid-template-columns:1fr; gap:14px; } }
   @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 58px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; min-width:0; } .details { grid-template-columns:1fr; } ha-card { padding:8px; } }
+  @container (max-width:390px) { .single-team .loadout { flex-wrap:wrap; } .single-team .inventory { grid-template-columns:repeat(7,23px); } .single-team .slot { width:23px; height:23px; } .single-team .extras { grid-template-columns:repeat(4,22px); } .single-team .spell-rune { width:22px; height:22px; } }
   @media (max-width:800px) { .teams { grid-template-columns:1fr; gap:14px; } }
 `;
 
@@ -202,14 +221,16 @@ var LeagueStatsLastMatchCardEditor = class extends HTMLElement {
     if (!this.shadowRoot) return;
     const accounts = discoverAccounts(this._hass?.states || {});
     const options = accounts.map((account) => `<option value="${esc(account.id)}" ${account.id === this._config.account ? "selected" : ""}>${esc(account.label)}</option>`).join("");
-    this.shadowRoot.innerHTML = `<style>:host{display:block;padding:12px 0}label{display:grid;gap:7px;font-weight:600}select{box-sizing:border-box;width:100%;padding:10px 12px;border:1px solid var(--divider-color,#777);border-radius:8px;color:var(--primary-text-color);background:var(--card-background-color,#222)}small{opacity:.72;font-weight:400}</style>
-      <label>League-Konto<select><option value="">Automatisch${accounts.length === 1 ? ` (${esc(accounts[0].label)})` : ""}</option>${options}</select><small>Bei einem Konto wird es automatisch verwendet. Bei mehreren Konten bitte ausw\xE4hlen.</small></label>`;
-    this.shadowRoot.querySelector("select")?.addEventListener("change", (event) => this._changed(event.target.value));
+    this.shadowRoot.innerHTML = `<style>:host{display:grid;gap:16px;padding:12px 0}label{display:grid;gap:7px;font-weight:600}select{box-sizing:border-box;width:100%;padding:10px 12px;border:1px solid var(--divider-color,#777);border-radius:8px;color:var(--primary-text-color);background:var(--card-background-color,#222)}small{opacity:.72;font-weight:400}</style>
+      <label>League-Konto<select data-config="account"><option value="">Automatisch${accounts.length === 1 ? ` (${esc(accounts[0].label)})` : ""}</option>${options}</select><small>Bei einem Konto wird es automatisch verwendet. Bei mehreren Konten bitte ausw\xE4hlen.</small></label>
+      <label>Darstellung<select data-config="team"><option value="" ${!this._config.team ? "selected" : ""}>Beide Teams</option><option value="blue" ${this._config.team === "blue" ? "selected" : ""}>Blue Team</option><option value="red" ${this._config.team === "red" ? "selected" : ""}>Red Team</option></select><small>Mit zwei einzelnen Teamkarten kann Home Assistant sie auf Desktop nebeneinander und mobil untereinander anordnen.</small></label>`;
+    this.shadowRoot.querySelector('[data-config="account"]')?.addEventListener("change", (event) => this._changed("account", event.target.value));
+    this.shadowRoot.querySelector('[data-config="team"]')?.addEventListener("change", (event) => this._changed("team", event.target.value));
   }
-  _changed(account) {
+  _changed(key, value) {
     const config = { ...this._config };
-    if (account) config.account = account;
-    else delete config.account;
+    if (value) config[key] = value;
+    else delete config[key];
     this._config = config;
     this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
   }
@@ -268,7 +289,7 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
     return 8;
   }
   getGridOptions() {
-    return { columns: "full", min_columns: 6 };
+    return ["blue", "red"].includes(this._config.team) ? { columns: 6, min_columns: 4 } : { columns: "full", min_columns: 6 };
   }
   static getStubConfig() {
     return {};
@@ -311,13 +332,15 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
   }
   _teams(model) {
     this._lastModel = model;
-    return `<div class="teams">${this._team(model.blue)}${this._team(model.red)}</div>`;
+    const selected = ["blue", "red"].includes(this._config.team) ? this._config.team : null;
+    const teams = selected ? [model[selected]] : [model.blue, model.red];
+    return `<div class="teams${selected ? " single-team" : ""}">${teams.map((team) => this._team(team)).join("")}</div>`;
   }
   _team(team) {
     const players = team.players.map((player, index) => player ? this._player(player, team.side, index) : `<div class="player" aria-hidden="true"></div>`).join("");
     return `<section class="team ${team.side.toLowerCase()}">
       <header class="team-head"><div class="head-line"><span class="team-name">${team.side} Team <small>(${team.kills}/${team.deaths}/${team.assists})</small></span><span class="result ${team.victory ? "victory" : "defeat"}">${team.victory ? "Victory" : "Defeat"}</span></div>
-      <div class="objectives"><span>\u{1FA99} ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span>\u{1F409} ${team.dragons}</span><span>\u{1F451} ${team.barons}</span><span>\u{1F3F0} ${team.towers}</span></div></header>${players}</section>`;
+      <div class="objectives"><span class="gold">\u{1FA99} ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span class="objective"><ha-icon icon="mdi:dragon"></ha-icon>${team.dragons}</span><span class="objective"><ha-icon icon="mdi:shield-crown"></ha-icon>${team.barons}</span><span class="objective"><ha-icon icon="mdi:tower-fire"></ha-icon>${team.towers}</span></div></header>${players}</section>`;
   }
   _player(player, side, index) {
     const extras = [player.summonerSpells[0], player.summonerSpells[1], player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");

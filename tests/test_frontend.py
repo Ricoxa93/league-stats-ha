@@ -64,7 +64,7 @@ async def test_registers_static_path_and_lovelace_resource():
     resources.async_load.assert_awaited_once()
     resources.async_create_item.assert_awaited_once_with({
         "res_type": "module",
-        "url": f"{FRONTEND_URL}?v=0.4.1",
+        "url": f"{FRONTEND_URL}?v=0.4.2",
     })
 
 
@@ -90,7 +90,7 @@ async def test_updates_existing_resource_version():
     resources.async_create_item.assert_not_awaited()
     resources.async_update_item.assert_awaited_once_with("league-card", {
         "res_type": "module",
-        "url": f"{FRONTEND_URL}?v=0.4.1",
+        "url": f"{FRONTEND_URL}?v=0.4.2",
     })
 
 

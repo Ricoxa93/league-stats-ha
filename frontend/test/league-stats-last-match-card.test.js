@@ -57,6 +57,17 @@ it("liefert Home-Assistant-Größeninformationen", () => {
   expect(card.getGridOptions()).toEqual({ columns: "full", min_columns: 6 });
 });
 
+it.each([
+  [undefined, { columns: "full", min_columns: 6 }],
+  ["both", { columns: "full", min_columns: 6 }],
+  ["blue", { columns: 6, min_columns: 4 }],
+  ["red", { columns: 6, min_columns: 4 }],
+])("liefert für team=%s passende Rasteroptionen", (team, expected) => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card", ...(team ? { team } : {}) });
+  expect(card.getGridOptions()).toEqual(expected);
+});
+
 it("strukturiert beide Teamseiten für eine gespiegelte Desktop-Anordnung", async () => {
   const card = document.createElement("league-stats-last-match-card");
   card.setConfig({ type: "custom:league-stats-last-match-card" });
@@ -71,6 +82,52 @@ it("strukturiert beide Teamseiten für eine gespiegelte Desktop-Anordnung", asyn
     expect(row.querySelector(".kda-block")).not.toBeNull();
     expect(row.querySelector(".portrait-wrap")).not.toBeNull();
   }
+});
+
+it.each([
+  ["blue", "Blue", "Red"],
+  ["red", "Red", "Blue"],
+])("rendert mit team=%s nur die gewählte Teamkarte", async (team, visible, hidden) => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card", team });
+  card.hass = { states: states() };
+  document.body.append(card);
+  await card.updateComplete;
+  expect(card.shadowRoot.querySelectorAll(".team")).toHaveLength(1);
+  expect(card.shadowRoot.querySelector(".team-name").textContent).toContain(visible);
+  expect(card.shadowRoot.querySelector(".team-name").textContent).not.toContain(hidden);
+  expect(card.shadowRoot.querySelector(".teams").classList.contains("single-team")).toBe(true);
+  expect(card.shadowRoot.querySelectorAll("[data-player-row]")).toHaveLength(5);
+});
+
+it("behält ohne Teamkonfiguration beide Teams bei", async () => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card" });
+  card.hass = { states: states() };
+  document.body.append(card);
+  await card.updateComplete;
+  expect(card.shadowRoot.querySelectorAll(".team")).toHaveLength(2);
+  expect(card.shadowRoot.querySelector(".teams").classList.contains("single-team")).toBe(false);
+});
+
+it("behandelt team=both ausdrücklich wie die abwärtskompatible Gesamtansicht", async () => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card", team: "both" });
+  card.hass = { states: states() };
+  document.body.append(card);
+  await card.updateComplete;
+  expect(card.shadowRoot.querySelectorAll(".team")).toHaveLength(2);
+  expect(card.shadowRoot.querySelector(".teams").classList.contains("single-team")).toBe(false);
+});
+
+it("verwendet die MDI-Symbole der alten Teamübersicht für die Objectives", async () => {
+  const card = document.createElement("league-stats-last-match-card");
+  card.setConfig({ type: "custom:league-stats-last-match-card", team: "blue" });
+  card.hass = { states: states() };
+  document.body.append(card);
+  await card.updateComplete;
+  expect([...card.shadowRoot.querySelectorAll(".objective ha-icon")].map((entry) => entry.getAttribute("icon")))
+    .toEqual(["mdi:dragon", "mdi:shield-crown", "mdi:tower-fire"]);
 });
 
 it("zeigt vor dem ersten hass-Update einen Ladezustand", () => {

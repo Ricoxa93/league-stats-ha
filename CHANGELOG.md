@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2 – 2026-08-16
+
+- Neue Kartenoption für „Beide Teams“, „Blue Team“ oder „Red Team“.
+- Bestehende Karten bleiben kompatibel und zeigen ohne Auswahl weiterhin beide Teams.
+- Einzelne Teamkarten nutzen größere Champion-, Item-, Zauber- und Runensymbole.
+- Drachen, Barone und Türme verwenden wieder die MDI-Symbole der bisherigen Übersicht.
+- Einzelne Teamkarten lassen sich im Home-Assistant-Raster auf Desktop nebeneinander und mobil untereinander anordnen.
+
 ## 0.4.1 – 2026-08-16
 
 - Desktop-Karte nutzt die volle Sections-Breite und zeigt beide Teams nebeneinander.
