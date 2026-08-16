@@ -135,40 +135,37 @@ var CARD_STYLES = `
   .objective-svg { flex:none; }
   .gold { gap:5px; font-size:15px; font-weight:900; }
   .gold-delta { font-size:13px; font-weight:900; } .gold-delta.positive { color:#22c55e; } .gold-delta.negative { color:#ef4444; }
-  .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:180px minmax(85px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
+  .player { width:100%; min-height:58px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:6px 8px; border-radius:13px; display:grid; grid-template-areas:"portrait identity abilities combat" "portrait inventory abilities combat"; grid-template-columns:43px minmax(0,1fr) 39px 68px; grid-template-rows:minmax(20px,auto) 17px; align-items:center; column-gap:7px; row-gap:3px; cursor:pointer; text-align:left; }
   .blue .player { background:linear-gradient(90deg,rgba(30,64,175,.82),rgba(30,58,98,.84)); }
   .red .player { background:linear-gradient(90deg,rgba(153,27,27,.78),rgba(76,29,31,.86)); }
   .player[data-own-player="true"] { background:linear-gradient(90deg,rgba(133,92,0,.86),rgba(62,55,15,.88)); outline:1px solid #eab308; }
-  .portrait-wrap { position:relative; width:43px; height:43px; }
+  .portrait-wrap { grid-area:portrait; position:relative; width:43px; height:43px; }
   .portrait,.image-placeholder { width:43px; height:43px; border-radius:9px; object-fit:cover; background:#172033; display:grid; place-items:center; }
   .level { position:absolute; bottom:-3px; left:50%; transform:translateX(-50%); min-width:18px; padding:1px 4px; border-radius:5px; background:#2563a8; font-size:9px; font-weight:900; text-align:center; }
-  .player-main { min-width:0; display:flex; flex-direction:column; line-height:1.12; }
+  .player-main { min-width:0; line-height:1.12; }
+  .player-identity { grid-area:identity; min-width:0; align-self:end; display:flex; flex-direction:column; }
   .player-name { font-size:14px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .champion-role { margin-top:3px; font-size:12px; font-weight:650; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .kda-block { display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.05; }
+  .kda-block { line-height:1.05; }
+  .player-combat { grid-area:combat; align-self:stretch; min-width:0; display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between; text-align:right; padding-left:7px; border-left:1px solid rgba(255,255,255,.22); }
   .kda { font-size:18px; font-weight:900; white-space:nowrap; } .kda.good { color:#22c55e; } .kda.mid { color:#facc15; } .kda.low { color:#fb7185; }
   .kda-ratio { margin-top:4px; font-size:12px; opacity:.86; white-space:nowrap; }
-  .loadout { display:flex; align-items:flex-end; gap:6px; justify-content:start; }
   .inventory { display:grid; grid-template-columns:repeat(7,17px); gap:2px; }
+  .player-inventory { grid-area:inventory; justify-self:start; align-self:end; min-width:0; }
   .abilities-group { display:grid; grid-template-rows:repeat(2,15px); gap:2px; padding-left:5px; border-left:1px solid rgba(255,255,255,.22); }
+  .player-abilities { grid-area:abilities; align-self:stretch; box-sizing:border-box; align-content:space-between; }
   .spells-row,.runes-row { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
   .spell-rune { width:15px; height:15px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .slot { width:17px; height:17px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
-  .blue .loadout { order:1; } .blue .player-main { order:2; text-align:right; } .blue .kda-block { order:3; } .blue .portrait-wrap { order:4; }
-  .red .player { grid-template-columns:43px 58px minmax(85px,1fr) 180px; }
-  .red .portrait-wrap { order:1; } .red .kda-block { order:2; } .red .player-main { order:3; } .red .loadout { order:4; }
   .teams.single-team { width:100%; max-width:620px; grid-template-columns:minmax(0,1fr); }
-  .single-team .player,.single-team .red .player { min-height:72px; padding:7px 10px; grid-template-columns:56px minmax(0,1fr) 72px; grid-template-rows:auto auto; gap:4px 9px; }
-  .single-team .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; width:56px; height:56px; }
+  .single-team .player,.single-team .red .player { min-height:82px; padding:8px 10px; grid-template-areas:"portrait identity abilities combat" "portrait inventory abilities combat"; grid-template-columns:56px minmax(0,1fr) 64px 92px; grid-template-rows:minmax(25px,auto) 26px; column-gap:9px; row-gap:5px; }
+  .single-team .portrait-wrap { width:56px; height:56px; }
   .single-team .portrait,.single-team .portrait-wrap>.image-placeholder { width:56px; height:56px; border-radius:11px; }
   .single-team .level { font-size:10px; min-width:20px; }
-  .single-team .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; }
   .single-team .player-name { font-size:16px; }
   .single-team .champion-role { font-size:13px; }
-  .single-team .kda-block { order:3!important; grid-column:3; grid-row:1; }
   .single-team .kda { font-size:20px; }
   .single-team .kda-ratio { font-size:13px; }
-  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:flex-end; gap:12px; min-width:0; }
   .single-team .inventory { grid-template-columns:repeat(7,26px); gap:3px; }
   .single-team .abilities-group { grid-template-rows:repeat(2,24px); gap:3px; padding-left:10px; }
   .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,24px); gap:3px; }
@@ -200,8 +197,8 @@ var CARD_STYLES = `
   .dialog-abilities .spells-row,.dialog-abilities .runes-row { grid-template-columns:repeat(2,40px); gap:5px; }
   .dialog-abilities .spell-rune { width:40px; height:40px; border-radius:8px; }
   @container (max-width:840px) { .teams { width:100%; grid-template-columns:1fr; gap:14px; } }
-  @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 68px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:flex-end; gap:4px 7px; min-width:0; } .dialog-body { padding:16px; } .dialog-stats { grid-template-columns:1fr; } .dialog-loadout { flex-wrap:wrap; } .dialog-inventory { grid-template-columns:repeat(7,34px); gap:3px; } .dialog-inventory .slot { width:34px; height:34px; } .dialog-abilities { grid-template-rows:repeat(2,34px); padding-left:0; border-left:0; } .dialog-abilities .spells-row,.dialog-abilities .runes-row { grid-template-columns:repeat(2,34px); } .dialog-abilities .spell-rune { width:34px; height:34px; } ha-card { padding:8px; } }
-  @container (max-width:390px) { .single-team .loadout { grid-column:1 / -1; grid-row:3; flex-wrap:wrap; padding-top:4px; } .single-team .inventory { grid-template-columns:repeat(7,17px); gap:2px; } .single-team .slot { width:17px; height:17px; } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,22px); } .single-team .spell-rune { width:22px; height:22px; } }
+  @container (max-width:520px) { .player,.red .player,.single-team .player,.single-team .red .player { min-height:68px; grid-template-areas:"portrait identity abilities combat" "portrait inventory abilities combat"; grid-template-columns:43px minmax(0,1fr) 44px 72px; grid-template-rows:minmax(22px,auto) 20px; column-gap:6px; row-gap:4px; padding:6px 7px; } .single-team .portrait-wrap { width:43px; height:43px; } .single-team .portrait,.single-team .portrait-wrap>.image-placeholder { width:43px; height:43px; border-radius:9px; } .single-team .player-name { font-size:14px; } .single-team .champion-role { font-size:12px; } .single-team .kda { font-size:18px; } .single-team .kda-ratio { font-size:12px; } .single-team .inventory { grid-template-columns:repeat(7,20px); gap:2px; } .single-team .slot { width:20px; height:20px; } .single-team .abilities-group { grid-template-rows:repeat(2,20px); gap:2px; padding-left:5px; } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,20px); gap:2px; } .single-team .spell-rune { width:20px; height:20px; } .dialog-body { padding:16px; } .dialog-stats { grid-template-columns:1fr; } .dialog-loadout { flex-wrap:wrap; } .dialog-inventory { grid-template-columns:repeat(7,34px); gap:3px; } .dialog-inventory .slot { width:34px; height:34px; } .dialog-abilities { grid-template-rows:repeat(2,34px); padding-left:0; border-left:0; } .dialog-abilities .spells-row,.dialog-abilities .runes-row { grid-template-columns:repeat(2,34px); } .dialog-abilities .spell-rune { width:34px; height:34px; } ha-card { padding:8px; } }
+  @container (max-width:390px) { .single-team .player,.single-team .red .player { grid-template-columns:43px minmax(0,1fr) 39px 68px; } .single-team .inventory { grid-template-columns:repeat(7,17px); gap:2px; } .single-team .slot { width:17px; height:17px; } .single-team .abilities-group { grid-template-rows:repeat(2,18px); } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,18px); } .single-team .spell-rune { width:18px; height:18px; } }
   @media (max-width:800px) { .teams { grid-template-columns:1fr; gap:14px; } }
 `;
 
@@ -379,9 +376,10 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
     const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<button type="button" class="player" data-player-row data-own-player="${player.own}" data-side="${side.toLowerCase()}" data-player-index="${index}">
       <span class="portrait-wrap">${icon(player.championIcon, "portrait")}<span class="level">${esc2(player.championLevel ?? "?")}</span></span>
-      <span class="player-main"><span class="player-name">${esc2(player.name)}</span><span class="champion-role">${esc2(player.champion)} \xB7 ${esc2(player.role)}</span></span>
-      <span class="kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span>
-      <span class="loadout"><span class="inventory items-group">${slots(player)}</span><span class="abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span></span></button>`;
+      <span class="player-identity player-main"><span class="player-name">${esc2(player.name)}</span><span class="champion-role">${esc2(player.champion)} \xB7 ${esc2(player.role)}</span></span>
+      <span class="player-inventory inventory items-group">${slots(player)}</span>
+      <span class="player-abilities abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span>
+      <span class="player-combat kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span></button>`;
   }
   _openPlayer(side, index) {
     this._previousFocus = this.shadowRoot.activeElement;

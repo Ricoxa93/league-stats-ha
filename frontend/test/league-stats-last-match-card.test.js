@@ -78,10 +78,12 @@ it("strukturiert beide Teamseiten für eine gespiegelte Desktop-Anordnung", asyn
   const blue = card.shadowRoot.querySelector('.player[data-side="blue"]');
   const red = card.shadowRoot.querySelector('.player[data-side="red"]');
   for (const row of [blue, red]) {
-    expect(row.querySelector(".inventory")).not.toBeNull();
-    expect(row.querySelector(".player-main")).not.toBeNull();
-    expect(row.querySelector(".kda-block")).not.toBeNull();
-    expect(row.querySelector(".portrait-wrap")).not.toBeNull();
+    expect([...row.children].map((node) => node.classList[0])).toEqual([
+      "portrait-wrap", "player-identity", "player-inventory", "player-abilities", "player-combat",
+    ]);
+    expect(row.querySelectorAll(".player-inventory .slot")).toHaveLength(7);
+    expect(row.querySelectorAll(".player-abilities .spells-row .spell-rune")).toHaveLength(2);
+    expect(row.querySelectorAll(".player-abilities .runes-row .spell-rune")).toHaveLength(2);
   }
 });
 
@@ -153,14 +155,16 @@ it("färbt die alten Objective-SVGs im Red Team rot", async () => {
   expect([...card.shadowRoot.querySelectorAll(".objective-svg")].every((svg) => svg.getAttribute("fill") === "#f87171")).toBe(true);
 });
 
-it("ordnet Loadout-Gruppen nebeneinander und schützt sehr schmale Einzelkarten", () => {
-  expect(CARD_STYLES).toMatch(/\.loadout\s*\{[^}]*display:flex/);
+it("ordnet Spielerinhalte in einem festen Vier-Spalten-Raster an", () => {
   expect(CARD_STYLES).toMatch(/\.player-name\s*\{[^}]*font-size:14px/);
   expect(CARD_STYLES).toMatch(/\.champion-role\s*\{[^}]*font-size:12px/);
   expect(CARD_STYLES).toMatch(/\.kda\s*\{[^}]*font-size:18px/);
-  expect(CARD_STYLES).toMatch(/\.loadout\s*\{[^}]*align-items:flex-end/);
-  expect(CARD_STYLES).toMatch(/\.abilities-group\s*\{[^}]*grid-template-rows:repeat\(2,/);
-  expect(CARD_STYLES).toMatch(/@container \(max-width:390px\)[\s\S]*\.single-team \.loadout\s*\{[^}]*grid-column:1 \/ -1/);
+  expect(CARD_STYLES).toContain('"portrait identity abilities combat"');
+  expect(CARD_STYLES).toContain('"portrait inventory abilities combat"');
+  expect(CARD_STYLES).toMatch(/\.player-identity\s*\{[^}]*grid-area:identity/);
+  expect(CARD_STYLES).toMatch(/\.player-inventory\s*\{[^}]*grid-area:inventory/);
+  expect(CARD_STYLES).toMatch(/\.player-abilities\s*\{[^}]*grid-area:abilities/);
+  expect(CARD_STYLES).toMatch(/\.player-combat\s*\{[^}]*grid-area:combat/);
   expect(CARD_STYLES).toMatch(/@container \(max-width:390px\)[\s\S]*\.single-team \.inventory\s*\{[^}]*repeat\(7,17px\)/);
 });
 
