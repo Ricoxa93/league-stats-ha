@@ -10,11 +10,13 @@ export const CARD_STYLES = `
   .team-name { font-size:20px; line-height:1.05; font-weight:900; letter-spacing:-.25px; }
   .team-name small { font-size:12px; letter-spacing:0; }
   .blue .team-name { color:#60a5fa; } .red .team-name { color:#f87171; }
-  .result { font-weight:900; font-size:13px; } .victory { color:#22c55e; } .defeat { color:#ef4444; }
-  .objectives { display:flex; align-items:center; gap:11px; margin-top:6px; font-size:11px; font-weight:700; opacity:.92; flex-wrap:wrap; }
+  .result { font-weight:900; font-size:18px; line-height:1; } .victory { color:#22c55e; } .defeat { color:#ef4444; }
+  .objectives { display:flex; align-items:center; gap:14px; margin-top:8px; font-size:13px; font-weight:800; opacity:.96; flex-wrap:wrap; }
   .objective { display:inline-flex; align-items:center; gap:3px; }
-  .objective ha-icon { width:15px; height:15px; color:currentColor; }
-  .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:140px minmax(105px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
+  .objective-svg { flex:none; }
+  .gold { gap:5px; font-size:15px; font-weight:900; }
+  .gold-delta { font-size:13px; font-weight:900; } .gold-delta.positive { color:#22c55e; } .gold-delta.negative { color:#ef4444; }
+  .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:180px minmax(85px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
   .blue .player { background:linear-gradient(90deg,rgba(30,64,175,.82),rgba(30,58,98,.84)); }
   .red .player { background:linear-gradient(90deg,rgba(153,27,27,.78),rgba(76,29,31,.86)); }
   .player[data-own-player="true"] { background:linear-gradient(90deg,rgba(133,92,0,.86),rgba(62,55,15,.88)); outline:1px solid #eab308; }
@@ -27,13 +29,14 @@ export const CARD_STYLES = `
   .kda-block { display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.05; }
   .kda { font-size:14px; font-weight:900; white-space:nowrap; } .kda.good { color:#22c55e; } .kda.mid { color:#facc15; } .kda.low { color:#fb7185; }
   .kda-ratio { margin-top:4px; font-size:11px; opacity:.82; white-space:nowrap; }
-  .loadout { display:grid; gap:3px; justify-content:start; }
+  .loadout { display:flex; align-items:center; gap:6px; justify-content:start; }
   .inventory { display:grid; grid-template-columns:repeat(7,17px); gap:2px; }
-  .extras { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
+  .abilities-group { display:grid; grid-template-rows:auto auto; gap:2px; padding-left:5px; border-left:1px solid rgba(255,255,255,.22); }
+  .spells-row,.runes-row { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
   .spell-rune { width:15px; height:15px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .slot { width:17px; height:17px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .blue .loadout { order:1; } .blue .player-main { order:2; text-align:right; } .blue .kda-block { order:3; } .blue .portrait-wrap { order:4; }
-  .red .player { grid-template-columns:43px 58px minmax(105px,1fr) 140px; }
+  .red .player { grid-template-columns:43px 58px minmax(85px,1fr) 180px; }
   .red .portrait-wrap { order:1; } .red .kda-block { order:2; } .red .player-main { order:3; } .red .loadout { order:4; }
   .teams.single-team { width:100%; max-width:620px; grid-template-columns:minmax(0,1fr); }
   .single-team .player,.single-team .red .player { min-height:72px; padding:7px 10px; grid-template-columns:56px minmax(0,1fr) 72px; grid-template-rows:auto auto; gap:4px 9px; }
@@ -46,9 +49,10 @@ export const CARD_STYLES = `
   .single-team .kda-block { order:3!important; grid-column:3; grid-row:1; }
   .single-team .kda { font-size:16px; }
   .single-team .kda-ratio { font-size:12px; }
-  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:8px; min-width:0; }
+  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:12px; min-width:0; }
   .single-team .inventory { grid-template-columns:repeat(7,26px); gap:3px; }
-  .single-team .extras { grid-template-columns:repeat(4,24px); gap:3px; }
+  .single-team .abilities-group { gap:3px; padding-left:10px; }
+  .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,24px); gap:3px; }
   .single-team .slot { width:26px; height:26px; border-radius:5px; }
   .single-team .spell-rune { width:24px; height:24px; border-radius:5px; }
   .status { padding:28px; text-align:center; border-radius:16px; background:var(--ha-card-background,var(--card-background-color,#1c1c1c)); }
@@ -65,6 +69,6 @@ export const CARD_STYLES = `
   .dialog-items img { width:40px; height:40px; border-radius:8px; background:#111827; }
   @container (max-width:840px) { .teams { width:100%; grid-template-columns:1fr; gap:14px; } }
   @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 58px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; min-width:0; } .details { grid-template-columns:1fr; } ha-card { padding:8px; } }
-  @container (max-width:390px) { .single-team .loadout { flex-wrap:wrap; } .single-team .inventory { grid-template-columns:repeat(7,23px); } .single-team .slot { width:23px; height:23px; } .single-team .extras { grid-template-columns:repeat(4,22px); } .single-team .spell-rune { width:22px; height:22px; } }
+  @container (max-width:390px) { .single-team .loadout { grid-column:1 / -1; grid-row:3; flex-wrap:wrap; padding-top:4px; } .single-team .inventory { grid-template-columns:repeat(7,17px); gap:2px; } .single-team .slot { width:17px; height:17px; } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,22px); } .single-team .spell-rune { width:22px; height:22px; } }
   @media (max-width:800px) { .teams { grid-template-columns:1fr; gap:14px; } }
 `;

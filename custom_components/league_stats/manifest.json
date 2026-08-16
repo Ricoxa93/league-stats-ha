@@ -1,7 +1,7 @@
 {
   "domain": "league_stats",
   "name": "League Stats",
-  "version": "0.4.2",
+  "version": "0.4.4",
   "documentation": "https://developer.riotgames.com/",
   "issue_tracker": "https://github.com/Ricoxa93/league-stats-ha/issues",
   "requirements": [],

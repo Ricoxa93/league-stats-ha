@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.4 – 2026-08-16
+
+- Einzelne Blue- und Red-Team-Karten verwenden standardmäßig die volle Section-Breite.
+- Gold, Drache, Baron und Türme nutzen wieder die exakten SVG-Symbole der ursprünglichen Dashboard-Ansicht.
+- Goldwerte sowie Victory/Defeat sind größer und deutlicher hervorgehoben.
+- Beschwörerzauber stehen als eigene Gruppe oberhalb der Runen und sind optisch von den Items getrennt.
+- Sehr schmale Mobilansichten brechen die Ausrüstung weiterhin ohne abgeschnittene Symbole um.
+
 ## 0.4.2 – 2026-08-16
 
 - Neue Kartenoption für „Beide Teams“, „Blue Team“ oder „Red Team“.
