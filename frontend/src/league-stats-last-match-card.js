@@ -37,7 +37,7 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
   set hass(value) { this._hass = value; this._render(); }
   get hass() { return this._hass; }
   getCardSize() { return 8; }
-  getGridOptions() { return { columns: "full", min_columns: 6 }; }
+  getGridOptions() { return ["blue", "red"].includes(this._config.team) ? { columns: 6, min_columns: 4 } : { columns: "full", min_columns: 6 }; }
   static getStubConfig() { return {}; }
   static getConfigElement() { return document.createElement("league-stats-last-match-card-editor"); }
 
@@ -75,14 +75,16 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
 
   _teams(model) {
     this._lastModel = model;
-    return `<div class="teams">${this._team(model.blue)}${this._team(model.red)}</div>`;
+    const selected = ["blue", "red"].includes(this._config.team) ? this._config.team : null;
+    const teams = selected ? [model[selected]] : [model.blue, model.red];
+    return `<div class="teams${selected ? " single-team" : ""}">${teams.map((team) => this._team(team)).join("")}</div>`;
   }
 
   _team(team) {
     const players = team.players.map((player, index) => player ? this._player(player, team.side, index) : `<div class="player" aria-hidden="true"></div>`).join("");
     return `<section class="team ${team.side.toLowerCase()}">
       <header class="team-head"><div class="head-line"><span class="team-name">${team.side} Team <small>(${team.kills}/${team.deaths}/${team.assists})</small></span><span class="result ${team.victory ? "victory" : "defeat"}">${team.victory ? "Victory" : "Defeat"}</span></div>
-      <div class="objectives"><span>🪙 ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span>🐉 ${team.dragons}</span><span>👑 ${team.barons}</span><span>🏰 ${team.towers}</span></div></header>${players}</section>`;
+      <div class="objectives"><span class="gold">🪙 ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span class="objective"><ha-icon icon="mdi:dragon"></ha-icon>${team.dragons}</span><span class="objective"><ha-icon icon="mdi:shield-crown"></ha-icon>${team.barons}</span><span class="objective"><ha-icon icon="mdi:tower-fire"></ha-icon>${team.towers}</span></div></header>${players}</section>`;
   }
 
   _player(player, side, index) {

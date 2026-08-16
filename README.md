@@ -136,6 +136,22 @@ ApexCharts Support
 HACS Discovery
 Mehrsprachigkeit
 Options Flow
+## Eigene Last-Match-Karte
+
+Ab Version 0.4.2 kann die Karte im visuellen Editor `Beide Teams`, `Blue Team` oder `Red Team` anzeigen. Die gültigen YAML-Werte für `team` sind `both`, `blue` und `red`; ohne `team` bleibt die bisherige Gesamtansicht aktiv. Für eine responsive Ansicht werden zwei Karten in derselben Home-Assistant-Section angelegt:
+
+```yaml
+type: custom:league-stats-last-match-card
+team: blue
+```
+
+```yaml
+type: custom:league-stats-last-match-card
+team: red
+```
+
+Home Assistant ordnet beide Karten auf breiten Dashboards nebeneinander und auf schmalen Mobilansichten untereinander an. Ohne `team` bleibt das bisherige Verhalten mit beiden Teams erhalten.
+
 League Stats Dashboard Cards for Home Assistant Diese Beispiele zeigen fertige Dashboard-Karten für die League Stats Home-Assistant-Integration. Die Karten sind für HACS-Nutzer gedacht, die nach der Installation der Integration direkt eine optisch fertige Ansicht für das letzte Match und die letzten Spiele nutzen möchten. Vorschau Last Match Team View Last Match Team View Last Games / Match History Last Games History Voraussetzungen Für die Beispielkarten werden diese Lovelace-Custom-Cards genutzt: custom:button-card browser_mod für Popups, optional aber empfohlen Wenn browser_mod nicht installiert ist, funktionieren die Karten selbst, aber die Detail-Popups beim Antippen nicht. Wichtige Platzhalter In den YAML-Beispielen sind keine echten Spielernamen enthalten. Vor der Nutzung müssen diese Platzhalter angepasst werden. Platzhalter Bedeutung Beispiel ExamplePlayer#TAG Dein Riot-Name mit Tagline MyName#EUW sensor.league_stats_exampleplayer_tag Entity-Präfix deiner Integration sensor.league_stats_myname_euw Den richtigen Entity-Namen findest du in Home Assistant unter:
 
 Entwicklerwerkzeuge → Zustände → Suche nach: league_stats
