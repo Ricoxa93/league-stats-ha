@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -6,8 +7,14 @@ import pytest
 
 from custom_components.league_stats.frontend_registration import (
     FRONTEND_URL,
+    VERSION,
     async_register_frontend,
 )
+
+
+def test_frontend_version_matches_manifest():
+    manifest_path = Path(__file__).parents[1] / "custom_components" / "league_stats" / "manifest.json"
+    assert VERSION == json.loads(manifest_path.read_text(encoding="utf-8"))["version"]
 
 
 class Resources:
@@ -57,7 +64,7 @@ async def test_registers_static_path_and_lovelace_resource():
     resources.async_load.assert_awaited_once()
     resources.async_create_item.assert_awaited_once_with({
         "res_type": "module",
-        "url": f"{FRONTEND_URL}?v=0.4.0",
+        "url": f"{FRONTEND_URL}?v=0.4.1",
     })
 
 
@@ -83,7 +90,7 @@ async def test_updates_existing_resource_version():
     resources.async_create_item.assert_not_awaited()
     resources.async_update_item.assert_awaited_once_with("league-card", {
         "res_type": "module",
-        "url": f"{FRONTEND_URL}?v=0.4.0",
+        "url": f"{FRONTEND_URL}?v=0.4.1",
     })
 
 
