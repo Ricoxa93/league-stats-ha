@@ -155,6 +155,11 @@ it("färbt die alten Objective-SVGs im Red Team rot", async () => {
 
 it("ordnet Loadout-Gruppen nebeneinander und schützt sehr schmale Einzelkarten", () => {
   expect(CARD_STYLES).toMatch(/\.loadout\s*\{[^}]*display:flex/);
+  expect(CARD_STYLES).toMatch(/\.player-name\s*\{[^}]*font-size:14px/);
+  expect(CARD_STYLES).toMatch(/\.champion-role\s*\{[^}]*font-size:12px/);
+  expect(CARD_STYLES).toMatch(/\.kda\s*\{[^}]*font-size:18px/);
+  expect(CARD_STYLES).toMatch(/\.loadout\s*\{[^}]*align-items:flex-end/);
+  expect(CARD_STYLES).toMatch(/\.abilities-group\s*\{[^}]*grid-template-rows:repeat\(2,/);
   expect(CARD_STYLES).toMatch(/@container \(max-width:390px\)[\s\S]*\.single-team \.loadout\s*\{[^}]*grid-column:1 \/ -1/);
   expect(CARD_STYLES).toMatch(/@container \(max-width:390px\)[\s\S]*\.single-team \.inventory\s*\{[^}]*repeat\(7,17px\)/);
 });
@@ -200,6 +205,13 @@ it("zeigt Zauber und Runen in der Spielerzeile sowie Matchkontext im Dialog", as
   expect(dialog.textContent).toContain("Blue Side");
   expect(dialog.textContent).toContain("Victory");
   expect(dialog.querySelector(".dialog-champion-icon")?.getAttribute("src")).toBe("https://example.test/champion.png");
+  expect(dialog.querySelectorAll(".dialog-stat")).toHaveLength(6);
+  expect(dialog.querySelector(".dialog-inventory")).not.toBeNull();
+  expect(dialog.querySelector(".dialog-abilities .spells-row")).not.toBeNull();
+  expect(dialog.querySelector(".dialog-abilities .runes-row")).not.toBeNull();
+  expect(dialog.querySelectorAll(".dialog-inventory .slot")).toHaveLength(7);
+  expect(CARD_STYLES).toMatch(/\.dialog-stats\s*\{[^}]*grid-template-columns:repeat\(2,/);
+  expect(CARD_STYLES).toMatch(/@container \(max-width:520px\)[\s\S]*\.dialog-stats\s*\{[^}]*grid-template-columns:1fr/);
 });
 
 it("ersetzt ein fehlgeschlagenes Bild durch einen Platzhalter", async () => {
