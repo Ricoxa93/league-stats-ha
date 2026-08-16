@@ -129,11 +129,13 @@ var CARD_STYLES = `
   .team-name { font-size:20px; line-height:1.05; font-weight:900; letter-spacing:-.25px; }
   .team-name small { font-size:12px; letter-spacing:0; }
   .blue .team-name { color:#60a5fa; } .red .team-name { color:#f87171; }
-  .result { font-weight:900; font-size:13px; } .victory { color:#22c55e; } .defeat { color:#ef4444; }
-  .objectives { display:flex; align-items:center; gap:11px; margin-top:6px; font-size:11px; font-weight:700; opacity:.92; flex-wrap:wrap; }
+  .result { font-weight:900; font-size:18px; line-height:1; } .victory { color:#22c55e; } .defeat { color:#ef4444; }
+  .objectives { display:flex; align-items:center; gap:14px; margin-top:8px; font-size:13px; font-weight:800; opacity:.96; flex-wrap:wrap; }
   .objective { display:inline-flex; align-items:center; gap:3px; }
-  .objective ha-icon { width:15px; height:15px; color:currentColor; }
-  .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:140px minmax(105px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
+  .objective-svg { flex:none; }
+  .gold { gap:5px; font-size:15px; font-weight:900; }
+  .gold-delta { font-size:13px; font-weight:900; } .gold-delta.positive { color:#22c55e; } .gold-delta.negative { color:#ef4444; }
+  .player { width:100%; min-height:50px; box-sizing:border-box; border:0; color:inherit; font:inherit; margin:0 0 7px; padding:5px 7px; border-radius:13px; display:grid; grid-template-columns:180px minmax(85px,1fr) 58px 43px; align-items:center; gap:7px; cursor:pointer; text-align:left; }
   .blue .player { background:linear-gradient(90deg,rgba(30,64,175,.82),rgba(30,58,98,.84)); }
   .red .player { background:linear-gradient(90deg,rgba(153,27,27,.78),rgba(76,29,31,.86)); }
   .player[data-own-player="true"] { background:linear-gradient(90deg,rgba(133,92,0,.86),rgba(62,55,15,.88)); outline:1px solid #eab308; }
@@ -146,13 +148,14 @@ var CARD_STYLES = `
   .kda-block { display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.05; }
   .kda { font-size:14px; font-weight:900; white-space:nowrap; } .kda.good { color:#22c55e; } .kda.mid { color:#facc15; } .kda.low { color:#fb7185; }
   .kda-ratio { margin-top:4px; font-size:11px; opacity:.82; white-space:nowrap; }
-  .loadout { display:grid; gap:3px; justify-content:start; }
+  .loadout { display:flex; align-items:center; gap:6px; justify-content:start; }
   .inventory { display:grid; grid-template-columns:repeat(7,17px); gap:2px; }
-  .extras { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
+  .abilities-group { display:grid; grid-template-rows:auto auto; gap:2px; padding-left:5px; border-left:1px solid rgba(255,255,255,.22); }
+  .spells-row,.runes-row { display:grid; grid-template-columns:repeat(2,15px); gap:2px; }
   .spell-rune { width:15px; height:15px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .slot { width:17px; height:17px; border-radius:3px; object-fit:cover; background:rgba(255,255,255,.10); }
   .blue .loadout { order:1; } .blue .player-main { order:2; text-align:right; } .blue .kda-block { order:3; } .blue .portrait-wrap { order:4; }
-  .red .player { grid-template-columns:43px 58px minmax(105px,1fr) 140px; }
+  .red .player { grid-template-columns:43px 58px minmax(85px,1fr) 180px; }
   .red .portrait-wrap { order:1; } .red .kda-block { order:2; } .red .player-main { order:3; } .red .loadout { order:4; }
   .teams.single-team { width:100%; max-width:620px; grid-template-columns:minmax(0,1fr); }
   .single-team .player,.single-team .red .player { min-height:72px; padding:7px 10px; grid-template-columns:56px minmax(0,1fr) 72px; grid-template-rows:auto auto; gap:4px 9px; }
@@ -165,9 +168,10 @@ var CARD_STYLES = `
   .single-team .kda-block { order:3!important; grid-column:3; grid-row:1; }
   .single-team .kda { font-size:16px; }
   .single-team .kda-ratio { font-size:12px; }
-  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:8px; min-width:0; }
+  .single-team .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; align-items:center; gap:12px; min-width:0; }
   .single-team .inventory { grid-template-columns:repeat(7,26px); gap:3px; }
-  .single-team .extras { grid-template-columns:repeat(4,24px); gap:3px; }
+  .single-team .abilities-group { gap:3px; padding-left:10px; }
+  .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,24px); gap:3px; }
   .single-team .slot { width:26px; height:26px; border-radius:5px; }
   .single-team .spell-rune { width:24px; height:24px; border-radius:5px; }
   .status { padding:28px; text-align:center; border-radius:16px; background:var(--ha-card-background,var(--card-background-color,#1c1c1c)); }
@@ -184,7 +188,7 @@ var CARD_STYLES = `
   .dialog-items img { width:40px; height:40px; border-radius:8px; background:#111827; }
   @container (max-width:840px) { .teams { width:100%; grid-template-columns:1fr; gap:14px; } }
   @container (max-width:520px) { .player,.red .player { grid-template-columns:43px minmax(0,1fr) 58px; grid-template-rows:auto auto; } .portrait-wrap { order:1!important; grid-column:1; grid-row:1 / span 2; } .player-main { order:2!important; grid-column:2; grid-row:1; text-align:left!important; } .kda-block { order:3!important; grid-column:3; grid-row:1; } .loadout { order:4!important; grid-column:2 / 4; grid-row:2; display:flex; flex-wrap:wrap; align-items:center; gap:4px 7px; min-width:0; } .details { grid-template-columns:1fr; } ha-card { padding:8px; } }
-  @container (max-width:390px) { .single-team .loadout { flex-wrap:wrap; } .single-team .inventory { grid-template-columns:repeat(7,23px); } .single-team .slot { width:23px; height:23px; } .single-team .extras { grid-template-columns:repeat(4,22px); } .single-team .spell-rune { width:22px; height:22px; } }
+  @container (max-width:390px) { .single-team .loadout { grid-column:1 / -1; grid-row:3; flex-wrap:wrap; padding-top:4px; } .single-team .inventory { grid-template-columns:repeat(7,17px); gap:2px; } .single-team .slot { width:17px; height:17px; } .single-team .spells-row,.single-team .runes-row { grid-template-columns:repeat(2,22px); } .single-team .spell-rune { width:22px; height:22px; } }
   @media (max-width:800px) { .teams { grid-template-columns:1fr; gap:14px; } }
 `;
 
@@ -254,6 +258,20 @@ function slots(player) {
 function kdaClass(kda) {
   return kda >= 4 ? "good" : kda >= 2 ? "mid" : "low";
 }
+var OBJECTIVE_PATHS = {
+  dragon: "M8 0 6 4 3 1v4H0l3 3v3l4 5h2l4-5V8l3-3h-3V1l-3 3zm1 11 1-2 2-1-1 2zM4 8l1 2 2 1-1-2z",
+  baron: "M9 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7 8a1 1 0 1 1 2 0 1 1 0 0 1-2 0m0 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0m-2-2a1 1 0 1 1 2 0 1 1 0 0 1-2 0m5-10 2 4-1 1H9L8 4 7 5H5L4 4l2-4-6 4 2 4 3 8 1-1h4l1 1 3-8 2-4z",
+  tower: "m12 8-2 8H6L4 8l4 4zM8 0l4 4-1.003 1.002L11 5h3l-6 6-6-6h2.999L4 4zm0 2.4L6.4 4 8 5.6 9.6 4z"
+};
+function objectiveIcon(name, color) {
+  if (name === "gold") return `<svg class="objective-svg" data-objective="gold" width="16" height="16" viewBox="0 0 16 16" fill="${color}" aria-hidden="true">
+    <path d="M8 1.5c3.3 0 6 1.2 6 2.7v1.4c0 1.5-2.7 2.7-6 2.7S2 7.1 2 5.6V4.2c0-1.5 2.7-2.7 6-2.7z"/>
+    <path opacity=".75" d="M2 5.6c0 1.5 2.7 2.7 6 2.7s6-1.2 6-2.7v2.1c0 1.5-2.7 2.7-6 2.7S2 9.2 2 7.7z"/>
+    <path opacity=".55" d="M2 7.7c0 1.5 2.7 2.7 6 2.7s6-1.2 6-2.7v2.1c0 1.5-2.7 2.7-6 2.7s-6-1.2-6-2.7z"/>
+    <path fill="#ffffff" opacity=".35" d="M8 2.5c2.4 0 4.4.7 4.4 1.6S10.4 5.7 8 5.7 3.6 5 3.6 4.1 5.6 2.5 8 2.5z"/>
+  </svg>`;
+  return `<svg class="objective-svg" data-objective="${name}" width="16" height="16" viewBox="0 0 16 16" fill="${color}" aria-hidden="true"><path d="${OBJECTIVE_PATHS[name]}"></path></svg>`;
+}
 var LeagueStatsLastMatchCard = class extends HTMLElement {
   constructor() {
     super();
@@ -289,7 +307,7 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
     return 8;
   }
   getGridOptions() {
-    return ["blue", "red"].includes(this._config.team) ? { columns: 6, min_columns: 4 } : { columns: "full", min_columns: 6 };
+    return { columns: "full", min_columns: 6 };
   }
   static getStubConfig() {
     return {};
@@ -337,18 +355,20 @@ var LeagueStatsLastMatchCard = class extends HTMLElement {
     return `<div class="teams${selected ? " single-team" : ""}">${teams.map((team) => this._team(team)).join("")}</div>`;
   }
   _team(team) {
+    const teamColor = team.side === "Blue" ? "#60a5fa" : "#f87171";
     const players = team.players.map((player, index) => player ? this._player(player, team.side, index) : `<div class="player" aria-hidden="true"></div>`).join("");
     return `<section class="team ${team.side.toLowerCase()}">
       <header class="team-head"><div class="head-line"><span class="team-name">${team.side} Team <small>(${team.kills}/${team.deaths}/${team.assists})</small></span><span class="result ${team.victory ? "victory" : "defeat"}">${team.victory ? "Victory" : "Defeat"}</span></div>
-      <div class="objectives"><span class="gold">\u{1FA99} ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span class="objective"><ha-icon icon="mdi:dragon"></ha-icon>${team.dragons}</span><span class="objective"><ha-icon icon="mdi:shield-crown"></ha-icon>${team.barons}</span><span class="objective"><ha-icon icon="mdi:tower-fire"></ha-icon>${team.towers}</span></div></header>${players}</section>`;
+      <div class="objectives"><span class="objective gold">${objectiveIcon("gold", teamColor)}<span>${team.gold.toLocaleString("de-DE")}</span><span class="gold-delta ${team.goldDelta >= 0 ? "positive" : "negative"}">(${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span></span><span class="objective">${objectiveIcon("dragon", teamColor)}${team.dragons}</span><span class="objective">${objectiveIcon("baron", teamColor)}${team.barons}</span><span class="objective">${objectiveIcon("tower", teamColor)}${team.towers}</span></div></header>${players}</section>`;
   }
   _player(player, side, index) {
-    const extras = [player.summonerSpells[0], player.summonerSpells[1], player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const spells = [player.summonerSpells[0], player.summonerSpells[1]].map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<button type="button" class="player" data-player-row data-own-player="${player.own}" data-side="${side.toLowerCase()}" data-player-index="${index}">
       <span class="portrait-wrap">${icon(player.championIcon, "portrait")}<span class="level">${esc2(player.championLevel ?? "?")}</span></span>
       <span class="player-main"><span class="player-name">${esc2(player.name)}</span><span class="champion-role">${esc2(player.champion)} \xB7 ${esc2(player.role)}</span></span>
       <span class="kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span>
-      <span class="loadout"><span class="inventory">${slots(player)}</span><span class="extras">${extras}</span></span></button>`;
+      <span class="loadout"><span class="inventory items-group">${slots(player)}</span><span class="abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span></span></button>`;
   }
   _openPlayer(side, index) {
     this._previousFocus = this.shadowRoot.activeElement;

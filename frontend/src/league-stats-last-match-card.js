@@ -19,6 +19,22 @@ function slots(player) {
 
 function kdaClass(kda) { return kda >= 4 ? "good" : kda >= 2 ? "mid" : "low"; }
 
+const OBJECTIVE_PATHS = {
+  dragon: "M8 0 6 4 3 1v4H0l3 3v3l4 5h2l4-5V8l3-3h-3V1l-3 3zm1 11 1-2 2-1-1 2zM4 8l1 2 2 1-1-2z",
+  baron: "M9 10a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7 8a1 1 0 1 1 2 0 1 1 0 0 1-2 0m0 4a1 1 0 1 1 2 0 1 1 0 0 1-2 0m-2-2a1 1 0 1 1 2 0 1 1 0 0 1-2 0m5-10 2 4-1 1H9L8 4 7 5H5L4 4l2-4-6 4 2 4 3 8 1-1h4l1 1 3-8 2-4z",
+  tower: "m12 8-2 8H6L4 8l4 4zM8 0l4 4-1.003 1.002L11 5h3l-6 6-6-6h2.999L4 4zm0 2.4L6.4 4 8 5.6 9.6 4z",
+};
+
+function objectiveIcon(name, color) {
+  if (name === "gold") return `<svg class="objective-svg" data-objective="gold" width="16" height="16" viewBox="0 0 16 16" fill="${color}" aria-hidden="true">
+    <path d="M8 1.5c3.3 0 6 1.2 6 2.7v1.4c0 1.5-2.7 2.7-6 2.7S2 7.1 2 5.6V4.2c0-1.5 2.7-2.7 6-2.7z"/>
+    <path opacity=".75" d="M2 5.6c0 1.5 2.7 2.7 6 2.7s6-1.2 6-2.7v2.1c0 1.5-2.7 2.7-6 2.7S2 9.2 2 7.7z"/>
+    <path opacity=".55" d="M2 7.7c0 1.5 2.7 2.7 6 2.7s6-1.2 6-2.7v2.1c0 1.5-2.7 2.7-6 2.7s-6-1.2-6-2.7z"/>
+    <path fill="#ffffff" opacity=".35" d="M8 2.5c2.4 0 4.4.7 4.4 1.6S10.4 5.7 8 5.7 3.6 5 3.6 4.1 5.6 2.5 8 2.5z"/>
+  </svg>`;
+  return `<svg class="objective-svg" data-objective="${name}" width="16" height="16" viewBox="0 0 16 16" fill="${color}" aria-hidden="true"><path d="${OBJECTIVE_PATHS[name]}"></path></svg>`;
+}
+
 export class LeagueStatsLastMatchCard extends HTMLElement {
   constructor() {
     super();
@@ -37,7 +53,7 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
   set hass(value) { this._hass = value; this._render(); }
   get hass() { return this._hass; }
   getCardSize() { return 8; }
-  getGridOptions() { return ["blue", "red"].includes(this._config.team) ? { columns: 6, min_columns: 4 } : { columns: "full", min_columns: 6 }; }
+  getGridOptions() { return { columns: "full", min_columns: 6 }; }
   static getStubConfig() { return {}; }
   static getConfigElement() { return document.createElement("league-stats-last-match-card-editor"); }
 
@@ -81,20 +97,21 @@ export class LeagueStatsLastMatchCard extends HTMLElement {
   }
 
   _team(team) {
+    const teamColor = team.side === "Blue" ? "#60a5fa" : "#f87171";
     const players = team.players.map((player, index) => player ? this._player(player, team.side, index) : `<div class="player" aria-hidden="true"></div>`).join("");
     return `<section class="team ${team.side.toLowerCase()}">
       <header class="team-head"><div class="head-line"><span class="team-name">${team.side} Team <small>(${team.kills}/${team.deaths}/${team.assists})</small></span><span class="result ${team.victory ? "victory" : "defeat"}">${team.victory ? "Victory" : "Defeat"}</span></div>
-      <div class="objectives"><span class="gold">🪙 ${team.gold.toLocaleString("de-DE")} (${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span><span class="objective"><ha-icon icon="mdi:dragon"></ha-icon>${team.dragons}</span><span class="objective"><ha-icon icon="mdi:shield-crown"></ha-icon>${team.barons}</span><span class="objective"><ha-icon icon="mdi:tower-fire"></ha-icon>${team.towers}</span></div></header>${players}</section>`;
+      <div class="objectives"><span class="objective gold">${objectiveIcon("gold", teamColor)}<span>${team.gold.toLocaleString("de-DE")}</span><span class="gold-delta ${team.goldDelta >= 0 ? "positive" : "negative"}">(${team.goldDelta >= 0 ? "+" : ""}${team.goldDelta.toLocaleString("de-DE")})</span></span><span class="objective">${objectiveIcon("dragon", teamColor)}${team.dragons}</span><span class="objective">${objectiveIcon("baron", teamColor)}${team.barons}</span><span class="objective">${objectiveIcon("tower", teamColor)}${team.towers}</span></div></header>${players}</section>`;
   }
 
   _player(player, side, index) {
-    const extras = [player.summonerSpells[0], player.summonerSpells[1], player.primaryRune, player.secondaryRune]
-      .map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const spells = [player.summonerSpells[0], player.summonerSpells[1]].map((entry) => icon(entry?.icon, "spell-rune")).join("");
+    const runes = [player.primaryRune, player.secondaryRune].map((entry) => icon(entry?.icon, "spell-rune")).join("");
     return `<button type="button" class="player" data-player-row data-own-player="${player.own}" data-side="${side.toLowerCase()}" data-player-index="${index}">
       <span class="portrait-wrap">${icon(player.championIcon, "portrait")}<span class="level">${esc(player.championLevel ?? "?")}</span></span>
       <span class="player-main"><span class="player-name">${esc(player.name)}</span><span class="champion-role">${esc(player.champion)} · ${esc(player.role)}</span></span>
       <span class="kda-block"><span class="kda ${kdaClass(player.kda)}">${player.kills}/${player.deaths}/${player.assists}</span><span class="kda-ratio">${player.kda.toLocaleString("de-DE")} KDA</span></span>
-      <span class="loadout"><span class="inventory">${slots(player)}</span><span class="extras">${extras}</span></span></button>`;
+      <span class="loadout"><span class="inventory items-group">${slots(player)}</span><span class="abilities-group"><span class="spells-row">${spells}</span><span class="runes-row">${runes}</span></span></span></button>`;
   }
 
   _openPlayer(side, index) {
